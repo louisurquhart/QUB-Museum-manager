@@ -103,8 +103,7 @@ public class QUBMuseum implements QUBMuseumAPI {
     // --- Exhibit Management ---
     // TODO: COME UP WITH BETTER ID SETTING IDEA -> CURRENT ONE WONT WORK IF STUFF'S DELETED
 	@Override
-	public String createExhibit(String name, String description) throws Exception
-	{
+	public String createExhibit(String name, String description) throws Exception  {
         try {
             String id = Integer.toString(exhibits.size());
             exhibits.put(id, new Exhibit(name, description, id));
@@ -129,6 +128,9 @@ public class QUBMuseum implements QUBMuseumAPI {
 
 	@Override
 	public String getExhibitArtifactSign(String exhibitId, String artifactId) throws Exception {
+        Exhibit exhibit =  exhibits.get(exhibitId); // Gets exhibit reference
+        Artifact artifact = artifacts.get(artifactId); // Gets artifact reference
+
 		return null;
 	}
 
@@ -151,34 +153,33 @@ public class QUBMuseum implements QUBMuseumAPI {
 	}
 
 	@Override
-	public void deleteExhibit(String exhibitId) throws Exception
-	{
+	public void deleteExhibit(String exhibitId) throws Exception  {
 
 	}
 
 	@Override
-	public ArrayList<String> findExhibits(String searchCriteria, String sortBy) throws Exception
-	{
+	public ArrayList<String> findExhibits(String searchCriteria, String sortBy) throws Exception {
 		return null;
 	}
 
 	@Override
 	public void addArtifactToExhibit(String artifactId, String exhibitId, String sign) throws Exception
 	{
-
-		Exhibit exhibit = exhibits.get(exhibitId);
-        Artifact artifact = artifacts.get(artifactId);
+		Exhibit exhibit = exhibits.get(exhibitId); // Gets reference to exhibit
+        Artifact artifact = artifacts.get(artifactId); // Gets reference to artifact
+        exhibit.addArtifact(artifact, sign); // Adds artifact to exhibit with its sign
 	}
 
 	@Override
-	public void removeArtifactFromExhibit(String artifactId, String exhibitId) throws Exception
-	{
-		
+	public void removeArtifactFromExhibit(String artifactId, String exhibitId) throws Exception  {
+        Artifact  artifact = artifacts.get(artifactId);
+        Exhibit exhibit = exhibits.get(exhibitId);
 	}
 
 	@Override
 	public ArrayList<String> getExhibitArtifacts(String exhibitId) throws Exception
 	{
+        Exhibit exhibit = exhibits.get(exhibitId);
 		return null;
 	}
 
