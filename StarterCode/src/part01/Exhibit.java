@@ -6,14 +6,14 @@ import java.util.HashMap;
 public class Exhibit {
 
     // Variables + list to store artifacts
-    String name = "Unknown";
-    String description = "Unknown";
-    String id = "Unknown";
+    private String name = "Unknown";
+    private String description = "Unknown";
+    private String id = "Unknown";
 
-    ArrayList<Artifact> artifacts = new ArrayList<Artifact>();
+    private ArrayList<Artifact> artifacts = new ArrayList<Artifact>();
 
     // Hashmap to store a sign for each artifact
-    HashMap<String, String> artifactSigns = new HashMap<>(); // (ArtifactID, Sign)
+    private HashMap<Artifact, String> artifactSigns = new HashMap<>(); // (ArtifactID, Sign)
 
     // Constructor to create exhibit
     public Exhibit(String name, String description, String id)  {
@@ -26,6 +26,8 @@ public class Exhibit {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getId() { return id; }
+    public String getArtifactSign(Artifact artifact) { return artifactSigns.get(artifact); }
+    public ArrayList<Artifact> getArtifacts() { return artifacts; }
 
     public int getEngagementTime() {
         int engagementTime = 0;
@@ -39,13 +41,17 @@ public class Exhibit {
     public void setName(String name) { this.name = name; }
     public void setDescription(String description) { this.description = description; }
     public void setId(String id) { this.id = id; }
+    public void setArtifactSign(Artifact artifact) { this.artifactSigns.put(artifact, artifactSigns.get(artifact)); }
 
     public void addArtifact(Artifact artifact, String artifactSign) {
         // Adds artifact to artifacts arraylist:
         this.artifacts.add(artifact);
         // Adds the artifacts sign to the artifactSigns hashmap with (id, sign):
-        this.artifactSigns.put(artifact.getId(), artifactSign);
-
+        this.artifactSigns.put(artifact, artifactSign);
+    }
+    public void removeArtifact(Artifact artifact) {
+        artifactSigns.remove(artifact); // Removes the artifact id + sign from the artifactSigns hashmap
+        this.artifacts.remove(artifact); // Removes artifact from artifacts arrayList
     }
 
 }

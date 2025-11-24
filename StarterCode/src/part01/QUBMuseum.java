@@ -49,7 +49,7 @@ public class QUBMuseum implements QUBMuseumAPI {
             return null; // Returns null as creation was unsuccessful (as documentation says)
         }
 	}
-
+    // DONE
 	@Override
 	public String getArtifactInfo(String artifactId, String infoName) throws Exception
 	{
@@ -64,12 +64,12 @@ public class QUBMuseum implements QUBMuseumAPI {
             default -> null;
         };
     }
-
+    // DONE
 	@Override
 	public int getArtifactEngagementTime(String artifactId) throws Exception {
         return artifacts.get(artifactId).getEngagementMinutes();
 	}
-
+    // DONE
 	@Override
 	public void updateArtifactInfo(String artifactId, String infoName, String newValue) throws Exception
 	{
@@ -85,18 +85,25 @@ public class QUBMuseum implements QUBMuseumAPI {
             default -> throw new Exception("Invalid artifact info name given");
         };
 	}
-// Needs to delete ALL instances of artifact
+    // DONE
 	@Override
-	public void deleteArtifact(String artifactId) throws Exception
-    {
-        // For each artifact it should store which exhibits the artifact is stored within (somehow) -> for efficient deletion
+	public void deleteArtifact(String artifactId) throws Exception {
+        Artifact artifact = artifacts.get(artifactId); // Finds artifact using its ID
+
+        for(Exhibit exhibit : exhibits.values()) { // Removes all references to the artifact in all exhibits
+            exhibit.removeArtifact(artifact);
+        }
+        artifacts.remove(artifactId); // Then removes the artifact from the main artifacts hashmap.
 	}
 
+    // TODO: REALLY DIFFICULT
 	@Override
 	public ArrayList<String> findArtifacts(String searchCriteria, String sortBy) throws Exception
 	{
+        // SEARCHING ALGORITHM HERE
 
-        // Need to figure out how to sort the return effectively
+        // SORTING ALGORITHM HERE:
+
 		return null;
 	}
 
@@ -113,12 +120,13 @@ public class QUBMuseum implements QUBMuseumAPI {
         }
 	}
 
+    // DONE
 	@Override
 	public String getExhibitInfo(String exhibitId, String infoName) throws Exception
 	{
         // Finds the exhibit using its ID as a key for the exhibits hashmap
         Exhibit exhibit = exhibits.get(exhibitId);
-        // Depending on infoName, it then returns the appropiate info (info names based off the API documentation)
+        // Depending on infoName, it then returns the appropriate info (info names based off the API documentation)
         return switch (infoName) {
             case "name" -> exhibit.getName();
             case "description" -> exhibit.getDescription();
@@ -126,19 +134,21 @@ public class QUBMuseum implements QUBMuseumAPI {
         };
 	}
 
+    // DONE
 	@Override
 	public String getExhibitArtifactSign(String exhibitId, String artifactId) throws Exception {
         Exhibit exhibit =  exhibits.get(exhibitId); // Gets exhibit reference
         Artifact artifact = artifacts.get(artifactId); // Gets artifact reference
 
-		return null;
+		return exhibit.getArtifactSign(artifact); // Returns the artifacts sign for the specific exhibit
 	}
 
+    // DONE
 	@Override
 	public int getExhibitEngagementTime(String exhibitId) throws Exception {
 		return exhibits.get(exhibitId).getEngagementTime();
 	}
-
+    // DONE
 	@Override
 	public void updateExhibitInfo(String exhibitId, String infoName, String newValue) throws Exception
 	{
@@ -152,16 +162,24 @@ public class QUBMuseum implements QUBMuseumAPI {
         };
 	}
 
+    // DONE
 	@Override
 	public void deleteExhibit(String exhibitId) throws Exception  {
+        Exhibit exhibit = exhibits.get(exhibitId); // Finds exhibit using its ID
 
+        for(AnnualPlan annualPlan: annualPlans.values()) { // Goes through all AnnualPlans to remove all references to exhibit
+            annualPlan.removeExhibit(exhibit); // Calls removeExhibit in AnnualPlan to remove any references to the exhibit (if any)
+        }
+        exhibits.remove(exhibitId); // Removes exhibit from the main hashmap too
 	}
 
+    // TODO: REALLY DIFFICULT
 	@Override
 	public ArrayList<String> findExhibits(String searchCriteria, String sortBy) throws Exception {
 		return null;
 	}
 
+    // DONE
 	@Override
 	public void addArtifactToExhibit(String artifactId, String exhibitId, String sign) throws Exception
 	{
@@ -170,12 +188,16 @@ public class QUBMuseum implements QUBMuseumAPI {
         exhibit.addArtifact(artifact, sign); // Adds artifact to exhibit with its sign
 	}
 
+    // DONE
 	@Override
 	public void removeArtifactFromExhibit(String artifactId, String exhibitId) throws Exception  {
-        Artifact  artifact = artifacts.get(artifactId);
-        Exhibit exhibit = exhibits.get(exhibitId);
+        Artifact artifact = artifacts.get(artifactId); // Gets a reference to the artifact
+        Exhibit exhibit = exhibits.get(exhibitId); // Gets a reference to the exhibit
+
+        exhibit.removeArtifact(artifact);
 	}
 
+    //
 	@Override
 	public ArrayList<String> getExhibitArtifacts(String exhibitId) throws Exception
 	{
@@ -194,20 +216,27 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public String createAnnualPlan(int year) throws Exception
 	{
-        String id = Integer.toString(annualPlans.size()); // TODO: BETTER ID GENERATION SYSYEM
-        annualPlans.put(id, new AnnualPlan(year));
+        String id = Integer.toString(annualPlans.size()); // TODO: BETTER ID GENERATION SYSTEM
+        annualPlans.put(id, new AnnualPlan(year, id)); // TODO: Check if validation required
 		return id;
 	}
 
 	@Override
 	public String getAnnualPlan(int year) throws Exception
 	{
-		return "";
+        for (AnnualPlan annualPlan : annualPlans.values()) {
+            if (annualPlan.getYear() == year) {
+                return annualPlan.getId();
+            }
+        }
+		throw new Exception("Annual plan at given year not found"); // If no annual plan's found, an exception is thrown
 	}
 
 	@Override
     public void addExhibitToAnnualPlan(String exhibitId, String planId, String hall, int month) throws Exception
 	{
+        Exhibit exhibit =  exhibits.get(exhibitId); // Gets reference to exhibit
+        AnnualPlan annualPlan = annualPlans.get(planId); // Gets reference to annualPlan
 
 	}
 
@@ -220,19 +249,30 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public void deleteAnnualPlan(String planId) throws Exception
 	{
-		
+		annualPlans.remove(planId);
 	}
 
 	@Override
 	public String getAnnualPlanInfo(String planId, String infoName) throws Exception
 	{
-		return "";
+		AnnualPlan annualPlan = annualPlans.get(planId); // Finds reference to the annual plan
+
+        return switch (infoName) {
+            case "year" ->  Integer.toString(annualPlan.getYear());
+            case "total_exhibits" -> annualPlan.getTotalExhibits();
+            default -> null;
+        };
 	}
 
 	@Override
 	public void updateAnnualPlanInfo(String planId, String infoName, String newValue) throws Exception
 	{
-		
+		AnnualPlan annualPlan = annualPlans.get(planId); // Gets reference to annual plan
+
+        switch (infoName) {
+            case "year" ->  annualPlan.setYear(Integer.parseInt(newValue));
+            // TODO: realistically more options will need to be added
+        }
 	}
 
     // --- Console UI Testing Support ---
