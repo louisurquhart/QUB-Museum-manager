@@ -102,7 +102,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         artifacts.remove(artifactId); // Then removes the artifact from the main artifacts hashmap.
 	}
 
-    // DONE ALTHOUGH -> TODO: Likely full of logical errors haven't tested or properly looked at + ADD NULL CASE
+    // DONE TODO: But likely full of logical errors haven't tested or properly looked at
 	@Override
 	public ArrayList<String> findArtifacts(String searchCriteria, String sortBy) throws Exception {
         String[] splitSearchCriteria = searchCriteria.split("=", 2); // Parses input breaking down search filter type : search value
@@ -114,16 +114,18 @@ public class QUBMuseum implements QUBMuseumAPI {
         // SEARCHING ALGORITHM HERE (Options: 'type', 'name' (exact), 'name_contains' (just contains), 'id')
         boolean artifactMatches = false; // Flag set to true if match with searchType + searchValue found.
 
+        if (searchType == null ) { // If the searchTypes null
+            for(Artifact artifact : artifacts.values()) {
+                matchingArtifacts.add(artifact); // All artifacts are added to the matchingArtifacts array (as null means all exhibits)
+            }
+        }
+
         for (Artifact artifact : artifacts.values()) {
             artifactMatches = switch (searchType.toLowerCase()) { // Switch statement to accept every possible variable type requested
-                case "type" -> // Checks if the artifact type matches exactly with the given searchValue
-                        artifact.getType().equals(searchValue);
-                case "name" -> // Checks if the artifact name matches exactly with the given searchValue
-                        artifact.getName().equals(searchValue);
-                case "name_contains" ->  // Checks if the artifact name contains the given searchValue
-                        artifact.getName().contains(searchValue);
-                case "id" ->  // Checks if the artifact ID matches exactly with the given searchValue
-                        artifact.getId().equals(searchValue);
+                case "type" -> artifact.getType().equals(searchValue);// Checks if the artifact type matches exactly with the given searchValue
+                case "name" -> artifact.getName().equals(searchValue);// Checks if the artifact name matches exactly with the given searchValue
+                case "name_contains" -> artifact.getName().contains(searchValue);// Checks if the artifact name contains the given searchValue
+                case "id" -> artifact.getId().equals(searchValue);// Checks if the artifact ID matches exactly with the given searchValue
                 default -> artifactMatches;
             };
             if (artifactMatches) { //If the artifacts searchType matched the searchValue this iteration
@@ -132,6 +134,8 @@ public class QUBMuseum implements QUBMuseumAPI {
         boolean swapNeeded = false;
         // SORTING ALGORITHM HERE (Options: 'name', 'type' , 'id', 'engagement' - name and type are done alphabetically, id numerically and engagement accending
         //  NEED TO USE String.compareToIgnoreCase to compare lexicographical order (alphabetically kinda but works for all strings)
+
+        if(sortBy == null) { sortBy = "id"; } // In line with docs,  if sortBy = null it will default to sorting by ID
 
         int swaps; // Counts how many swaps have occurred
         do {
@@ -231,7 +235,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         exhibits.remove(exhibitId); // Removes exhibit from the main hashmap too
 	}
 
-    // TODO: Vaugely working -> no testing done, 100% logical errors
+    // TODO: Vaugely working -> no testing done, so definitely logical errors
 	@Override
 	public ArrayList<String> findExhibits(String searchCriteria, String sortBy) throws Exception {
         String[] splitSearchCriteria = searchCriteria.split("=", 2); // Parses input breaking down search filter type : search value
@@ -325,19 +329,41 @@ public class QUBMuseum implements QUBMuseumAPI {
         return exhibitIds; // Returns the converted arrayList of artifact ID's
 	}
 
-    // TODO: Looks difficult (probably not smart enough for this)
+    // DONE
 	@Override
 	public void reorderExhibitArtifacts(String exhibitId, ArrayList<String> artifactIds) throws Exception
 	{
 		Exhibit exhibit =  exhibits.get(exhibitId);
-        // Validates artifact ID's:
-        if(!(artifactIds.size() == exhibit.getArtifacts().size())) {
-            throw new Exception("Invalid number of artifactID's given");
+
+        // VALIDATION OF GIVEN ARTIFACT IDS:
+
+        // Creation of a checklist
+        ArrayList<String> checklistOfExhibitIds = new ArrayList<>(); // To validate all artifactId's given exist (in the exhibit) + aren't duplicated
+        for(Artifact artifact : exhibit.getArtifacts() ) { // Adds all artifactIds in the exhibit to the checklist
+            checklistOfExhibitIds.add(exhibit.getId());
+        }
+        for(String artifactId : artifactIds) { // Goes through all the given artifactIds
+            if(!checklistOfExhibitIds.contains(artifactId)) { // If the given artifactID doesn't exist in the list of preexisting exhibits artifact ID's
+                throw new Exception("Given artifactIds list is invalid, relevant artifact either doesn't exist in exhibit or is duplicated"); // an exceptions thrown
+            } else {
+                checklistOfExhibitIds.remove(artifactId); // If it exists its then removed from the checklist so duplicates will flag as not existing
+            }
         }
 
+        // REORDERING OF VALIDATED ID'S
+        // Takes copy of all exhibits artifact signs
+        HashMap<Artifact, String> exhibitSignsCopy =  new HashMap<>();
+        for(Artifact artifact : exhibit.getArtifacts()) {
+            exhibitSignsCopy.put(artifact, exhibit.getArtifactSign(artifact));
+        }
+        // Then, it goes through the list of given artifactIds in order, adding each artifact paired with its saved sign in order
+        for (String artifactId : artifactIds) {
+            Artifact artifact = artifacts.get(artifactId); // Finds artifact using its ID from artifactIds
+            exhibit.addArtifact(artifact, exhibitSignsCopy.get(artifact)); // Adds artifact + its sign to the exhibit
+        }
 	}
-    // --- Annual Plan Management ---
 
+    // --- Annual Plan Management ---
 
     // DONE
 	@Override
@@ -361,47 +387,77 @@ public class QUBMuseum implements QUBMuseumAPI {
 		throw new Exception("Annual plan at given year not found"); // If no annual plan's found, an exception is thrown
 	}
 
-    //
+    // DONE
 	@Override
     public void addExhibitToAnnualPlan(String exhibitId, String planId, String hall, int month) throws Exception
 	{
         Exhibit exhibit =  exhibits.get(exhibitId); // Gets reference to exhibit
         AnnualPlan annualPlan = annualPlans.get(planId); // Gets reference to annualPlan
-        annualPlan.addExhibit(exhibit); // TODO: Need to figure out how to add hall + month here
+        annualPlan.addExhibit(exhibit, hall, month); // Adds exhibit to annualPlan with its hall + month
 	}
 
+    // DONE
 	@Override
 	public ArrayList<String> getAnnualPlanExhibits(String planId, String hall, int month) throws Exception
 	{
-		return null;
+        ArrayList<String> matchingExhibitIds = new ArrayList<>();
+        AnnualPlan annualPlan = annualPlans.get(planId);
+
+        for(Exhibit exhibit : annualPlan.getExhibits()) { // Goes through all exhibits -> checks if exhibits hall + month match input;
+            if(annualPlan.getExhibitMonth(exhibit) == month && annualPlan.getExhibitHall(exhibit).equals(hall) ){
+                matchingExhibitIds.add(exhibit.getId());  // If they match, the exhibits ID's added to matchingExhibitIds
+            }
+        }
+		return matchingExhibitIds; // Returns the ArrayList of all exhibits IDs which match the given hall + month
 	}
 
+    // DONE
 	@Override
 	public void deleteAnnualPlan(String planId) throws Exception
 	{
 		annualPlans.remove(planId);
 	}
 
+    // DONE
 	@Override
 	public String getAnnualPlanInfo(String planId, String infoName) throws Exception
 	{
-		AnnualPlan annualPlan = annualPlans.get(planId); // Finds reference to the annual plan
+        AnnualPlan annualPlan = annualPlans.get(planId); // Gets reference to annualPlan using its given ID
+
+        if (annualPlan == null) { return null; } // In line with docs, null is returned if annualPlan isn't found
 
         return switch (infoName) {
             case "year" ->  Integer.toString(annualPlan.getYear());
-            case "total_exhibits" -> annualPlan.getTotalExhibits();
-            default -> null;
+            case "total_exhibits" -> Integer.toString(annualPlan.getExhibits().size());
+            default -> throw new Exception("Invalid infoName given");
         };
 	}
 
+    // DONE
 	@Override
 	public void updateAnnualPlanInfo(String planId, String infoName, String newValue) throws Exception
 	{
 		AnnualPlan annualPlan = annualPlans.get(planId); // Gets reference to annual plan
 
         switch (infoName) {
-            case "year" ->  annualPlan.setYear(Integer.parseInt(newValue));
-            // TODO: realistically more options will need to be added
+            case "year" ->  {
+                for(AnnualPlan plan : annualPlans.values()) { // Goes through all annualPlans to validate non have the given year
+                    if(plan.getYear() == Integer.parseInt(newValue)) { // If the year of the annualPlan's the same as the given value  bn
+                        throw new Exception("Invalid infoName given; Year already exists for an annual plan");
+                    }
+                }
+                annualPlan.setYear(Integer.parseInt(newValue));
+            }
+            case "id" -> {
+                if (annualPlans.get(newValue) == null) {
+                    annualPlans.remove(planId); // Removes annualPlan from hashmap under old ID
+                    annualPlans.put(newValue, annualPlan); // Adds annualPlan to hashmap with new given ID
+                    annualPlan.setId(newValue); // Updates the annualPlans stored ID
+                } else {
+                    throw new Exception("Invalid newValue for ID given (already exists");
+                }
+            }
+            default -> throw new Exception("Invalid infoName given");
         }
 	}
 

@@ -6,9 +6,9 @@ import java.util.HashMap;
 public class AnnualPlan {
 
     private static class exhibitDisplayInfo {
-        exhibitDisplayInfo(String hall, String month) { this.hall = hall; this.month = month; }
+        exhibitDisplayInfo(String hall, int month) { this.hall = hall; this.month = month; }
         String hall;
-        String month;
+        int month;
     }
 
     // Variables:
@@ -26,7 +26,7 @@ public class AnnualPlan {
     // Getter methods:
     public int getYear() { return year; }
     public String getId() {return id; }
-    public String getExhibitMonth(Exhibit exhibit) { return exhibitDisplayInfos.get(exhibit).month; }
+    public int getExhibitMonth(Exhibit exhibit) { return exhibitDisplayInfos.get(exhibit).month; }
     public String getExhibitHall(Exhibit exhibit) { return exhibitDisplayInfos.get(exhibit).hall; }
     public ArrayList<Exhibit> getExhibits() {  return exhibits; }
 
@@ -35,7 +35,7 @@ public class AnnualPlan {
     public void setId(String id) { this.id = id; }
 
     // Add/remove methods:
-    public void addExhibit(Exhibit exhibit, String hall, String month) {
+    public void addExhibit(Exhibit exhibit, String hall, int month) {
         exhibits.add(exhibit); // Adds the exhibit to the exhibits array
         exhibitDisplayInfos.put(exhibit, new exhibitDisplayInfo(hall, month)); // Adds the extra info about the exhibit to exhibitDisplayInfos
     }

@@ -44,10 +44,8 @@ public class Exhibit {
     public void setArtifactSign(Artifact artifact) { this.artifactSigns.put(artifact, artifactSigns.get(artifact)); }
 
     public void addArtifact(Artifact artifact, String artifactSign) {
-        // Adds artifact to artifacts arraylist:
-        this.artifacts.add(artifact);
-        // Adds the artifacts sign to the artifactSigns hashmap with (id, sign):
-        this.artifactSigns.put(artifact, artifactSign);
+        this.artifacts.add(artifact); // Adds artifact to artifacts arraylist:
+        this.artifactSigns.put(artifact, artifactSign); // Adds the artifacts sign to the artifactSigns hashmap with (id, sign):
     }
     public void removeArtifact(Artifact artifact) {
         artifactSigns.remove(artifact); // Removes the artifact id + sign from the artifactSigns hashmap
