@@ -17,6 +17,9 @@ public class QUBMuseum implements QUBMuseumAPI {
     int exhibitIdCount = 0;
     int annualPlanIdCount = 0;
 
+    // Main menu variables
+    private MenuStates currentState = MenuStates.MAIN_MENU;
+
 	public static void main(String[] args) {
 		// Create API which manages all business logic
 		QUBMuseum api = new QUBMuseum();
@@ -118,18 +121,23 @@ public class QUBMuseum implements QUBMuseumAPI {
             for(Artifact artifact : artifacts.values()) {
                 matchingArtifacts.add(artifact); // All artifacts are added to the matchingArtifacts array (as null means all exhibits)
             }
-        }
-
-        for (Artifact artifact : artifacts.values()) {
-            artifactMatches = switch (searchType.toLowerCase()) { // Switch statement to accept every possible variable type requested
-                case "type" -> artifact.getType().equals(searchValue);// Checks if the artifact type matches exactly with the given searchValue
-                case "name" -> artifact.getName().equals(searchValue);// Checks if the artifact name matches exactly with the given searchValue
-                case "name_contains" -> artifact.getName().contains(searchValue);// Checks if the artifact name contains the given searchValue
-                case "id" -> artifact.getId().equals(searchValue);// Checks if the artifact ID matches exactly with the given searchValue
-                default -> artifactMatches;
-            };
-            if (artifactMatches) { //If the artifacts searchType matched the searchValue this iteration
-                matchingArtifacts.add(artifact); } // The artifacts ID was added to matchingArtifactIds
+        } else {
+            for (Artifact artifact : artifacts.values()) {
+                artifactMatches = switch (searchType.toLowerCase()) { // Switch statement to accept every possible variable type requested
+                    case "type" ->
+                            artifact.getType().equals(searchValue);// Checks if the artifact type matches exactly with the given searchValue
+                    case "name" ->
+                            artifact.getName().equals(searchValue);// Checks if the artifact name matches exactly with the given searchValue
+                    case "name_contains" ->
+                            artifact.getName().contains(searchValue);// Checks if the artifact name contains the given searchValue
+                    case "id" ->
+                            artifact.getId().equals(searchValue);// Checks if the artifact ID matches exactly with the given searchValue
+                    default -> artifactMatches;
+                };
+                if (artifactMatches) { //If the artifacts searchType matched the searchValue this iteration
+                    matchingArtifacts.add(artifact);
+                } // The artifacts ID was added to matchingArtifactIds
+            }
         }
         boolean swapNeeded = false;
         // SORTING ALGORITHM HERE (Options: 'name', 'type' , 'id', 'engagement' - name and type are done alphabetically, id numerically and engagement accending
@@ -333,7 +341,9 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public void reorderExhibitArtifacts(String exhibitId, ArrayList<String> artifactIds) throws Exception
 	{
-		Exhibit exhibit =  exhibits.get(exhibitId);
+
+		Exhibit exhibit = exhibits.get(exhibitId);
+        if(exhibit == null) { throw new Exception("Exhibit with id " + exhibitId + " not found"); }
 
         // VALIDATION OF GIVEN ARTIFACT IDS:
 
@@ -369,8 +379,10 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public String createAnnualPlan(int year) throws Exception
 	{
+        // Generates ID for annual plan + increments counts
         String id = Integer.toString(annualPlanIdCount);
         annualPlanIdCount++;
+
         annualPlans.put(id, new AnnualPlan(year, id)); // TODO: Check if validation required
 		return id;
 	}
@@ -471,8 +483,149 @@ public class QUBMuseum implements QUBMuseumAPI {
 
 	@Override
 	public String getCurrentPrompt()
-	{
-		return "";
+    {
+        // LEVEL 1 STATE:
+        if(currentState == MenuStates.MAIN_MENU) {
+            return """
+                    MAIN MENU
+                    Options:
+                    1. Manage Artifacts
+                    2. Manage Exhibits
+                    3. Manage Annual Plans
+                    4. Exit programme
+                    """;
+        }
+        // LEVEL 2 STATES:
+        else if (currentState == MenuStates.MANAGE_ARTIFACTS) {
+            return """
+                    MANAGE ARTIFACTS MENU
+                    Options:
+                    1. Add an artifact
+                    2. View an artifact
+                    3. Delete an artifact
+                    4. Update an artifacts info
+                    """;
+        } else if(currentState == MenuStates.MANAGE_EXHIBITS) {
+            return """
+                    MANAGE EXHIBITS MENU
+                    Options:
+                    1. Add an exhibit
+                    2. View an exhibit
+                    3. Delete an exhibit
+                    4. Update an exhibits info
+                    5. Add artifact to an exhibit
+                    6. Delete artifact from an exhibit
+                    7. Reorder artifacts in an exhibit
+                    """;
+        } else if(currentState == MenuStates.MANAGE_ANNUAL_PLANS) {
+            return """
+                    MANAGE ANNUAL_PLANS MENU
+                    Options:
+                    1. Add an annual plan
+                    2. View an annual plan
+                    3. Delete an annual plan
+                    4. Update an annual plan info
+                    5. Add an exhibit to an annual plan
+                    6. Delete an exhibit from an annual plan
+                    """;
+        }
+        // -------- MANAGE ARTIFACT METHODS --------
+        else if(currentState == MenuStates.ADD_ARTIFACT) {
+            return """
+                    Enter the new artifacts type, name, description, engagement minutes in format:
+                    (type;name;description;engagementMinutes)
+            """;
+        } else if(currentState == MenuStates.VIEW_ARTIFACT) {
+            return """
+                    Enter the artifacts property type + value + how to sort the matching artifacts.
+                    - searchType options: type, name, name_contains, id, null (blank)
+                    - sortBy options: name, type, id, engagement, null (blank)
+                    - null (blank) for searchType returns all artifacts; null for sortBy returns in ID order
+                    - Format: (searchType=searchValue;sortBy) - ignoring brackets, no whitespace, semicolons separating each value
+            """;
+        } else if(currentState == MenuStates.DELETE_ARTIFACT) {
+            return """
+                    Enter the artifacts ID:
+            """;
+        } else if(currentState == MenuStates.UPDATE_ARTIFACT) {
+            return """
+                    Enter the artifacts ID + the information to updates name + the value to replace the info
+                    - infoName options: name, type, description, engagement_minutes
+                    - newValue restrictions (name/type/description - Continuous string, engagement_minutes - Integer)
+                    - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+                    """;
+        }
+        // -------- MANAGE EXHIBITS METHODS --------
+        else if(currentState == MenuStates.ADD_EXHIBIT) {
+            return """
+                    Enter the new exhibits name and description in format:
+                    (name;description)
+            """;
+        } else if(currentState == MenuStates.VIEW_EXHIBIT) {
+            return """
+                    Enter the exhibits property type + value + how to sort the matching exhibits.
+                    - searchType options: name, name_contains, id, null (blank)
+                    - sortBy options: name, id, null (blank)
+                    - null (blank) for searchType returns all exhibits; null for sortBy returns in ID order
+                    - Format: (searchType=searchValue;sortBy) - ignoring brackets, no whitespace, semicolons separating each value
+            """;
+        } else if (currentState == MenuStates.DELETE_EXHIBIT) {
+            return """
+                    Enter the exhibits ID:
+            """;
+        } else if (currentState == MenuStates.UPDATE_EXHIBIT) {
+            return """
+                    Enter the exhibits ID + the information to updates name + the value to replace the info
+                    - infoName options: name, description
+                    - newValue restrictions (name/type/description - Continuous string, engagement_minutes - Integer)
+                    - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+                    """;
+        } else if(currentState == MenuStates.ADD_ARTIFACT_TO_EXHIBIT) {
+            return """
+                    Enter artifacts ID, the exhibits ID and the sign to go with the artifact
+                    - Format: (artifactID;exhibitID,sign)
+                    """;
+        } else if(currentState == MenuStates.DELETE_ARTIFACT_IN_EXHIBIT) {
+            return """
+                    Enter artifacts ID + exhibits ID
+                    - Format: (artifactID;exhibitID) - ignoring brackets, no whitespace, semicolons separating each value
+            """;
+        } else if(currentState == MenuStates.REORDER_ARTIFACTS_IN_EXHIBIT) {
+            return """
+                    Enter exhibitID + List of artifact ID's in a new order (ID's must all already exist in exhibit + not repeat)
+                    Format: (exhibitID;artifactID1,artifactID2,...) - ignoring brackets, no whitespace, semicolons separating each value.
+            """;
+        }
+        // -------- MODIFY ANNUAL PLAN METHODS --------
+        else if(currentState == MenuStates.ADD_ANNUAL_PLAN) {
+            return """
+                    Enter new annual plans year:
+                    """;
+        } else if(currentState == MenuStates.VIEW_ANNUAL_PLAN) {
+            return """
+                    Enter annual plans year:
+                    """;
+        } else if(currentState == MenuStates.UPDATE_ANNUAL_PLAN) {
+            return """
+                    Enter the annual plans ID:
+            """;
+        } else if(currentState == MenuStates.DELETE_ANNUAL_PLAN) {
+            return """
+                    Enter the annual plans ID + the information to updates name + the value to replace the info
+                    - infoName options: year, id
+                    - newValue restrictions (year/id - Integers)
+                    - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+            """;
+        } else if(currentState == MenuStates.ADD_EXHIBIT_TO_ANNUAL_PLAN) {
+            return """
+                    Enter exhibitID + annualPlanID:
+            """;
+        } else if(currentState == MenuStates.DELETE_EXHIBIT_IN_ANNUAL_PLAN) {
+            return """
+                    Enter exhibitID + annualPlanID:
+            """;
+        }
+        return "EXIT";
 	}
 
 	@Override
@@ -496,7 +649,115 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public String processInput(String input)
     {
-    	return "EXIT";
+        String output = "Unknown";
+
+        switch(currentState) {
+            // Level 1 - Main menu
+            case MAIN_MENU:
+                switch (input) {
+                    case "1": // Manage artifacts option
+                        output = "Entering artifact management menu";
+                        currentState = MenuStates.MANAGE_ARTIFACTS;
+                        break;
+                    case "2": // Manage exhibits option
+                        output = "Entering exhibit management menu";
+                        currentState = MenuStates.MANAGE_EXHIBITS;
+                        break;
+                    case "3": // Manage annualPlans option
+                        output = "Entering annual plan management menu";
+                        currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                        break;
+                    case "4": // Exit programme option
+                        return "EXIT"; // Returns exit which in the main class will exit the program if returned
+                }
+                break;
+            // Level 2 - Manage options
+            case MANAGE_ARTIFACTS:
+                switch (input) {
+                    case "1": // Add an artifact option
+                        currentState = MenuStates.ADD_ARTIFACT;
+                        output = "";
+                        break;
+                    case "2": // View an artifact option
+                        currentState = MenuStates.VIEW_ARTIFACT;
+                        output = "";
+                        break;
+                    case "3": // Delete an artifact option
+                        currentState = MenuStates.DELETE_ARTIFACT;
+                        output = "";
+                        break;
+                    case "4": // Update an artifact option
+                        currentState = MenuStates.UPDATE_ARTIFACT;
+                        output = "";
+                        break;
+                }
+                break;
+            case MANAGE_EXHIBITS:
+                switch (input) {
+                    case "1": // Add an exhibit option
+                        currentState = MenuStates.ADD_EXHIBIT;
+                        output = "";
+                        break;
+                    case "2": // view an exhibit option
+                        currentState = MenuStates.VIEW_EXHIBIT;
+                        output = "";
+                        break;
+                    case "3": // Delete an exhibit option
+                        currentState = MenuStates.DELETE_EXHIBIT;
+                        output = "";
+                        break;
+                    case "4": // Update an exhibit option
+                        currentState = MenuStates.UPDATE_EXHIBIT;
+                        output = "";
+                        break;
+                }
+                break;
+            case MANAGE_ANNUAL_PLANS:
+                switch (input) {
+                    case "1": // Add an annual plan option
+                        currentState = MenuStates.ADD_ANNUAL_PLAN;
+                        output = "";
+                        break;
+                    case "2": // View an annual plan option
+                        currentState = MenuStates.VIEW_ANNUAL_PLAN;
+                        output = "";
+                        break;
+                    case "3": // Delete an annual plan option
+                        currentState = MenuStates.DELETE_ANNUAL_PLAN;
+                        output = "";
+                        break;
+                    case "4": // Update an annual plan option
+                        currentState = MenuStates.UPDATE_ANNUAL_PLAN;
+                        output = "";
+                        break;
+                }
+                break;
+            case ADD_ARTIFACT:
+                try {
+                    String[] splitSearchCriteria = input.split(";", 4);  // Splits input breaking it down into seperate variables
+                    if(splitSearchCriteria.length != 4) { // If there isn't 4 seperate varaibles after parsing, an error is returned
+                        return "ERROR - Invalid format given; Invalid amount of parts. Format:(type;name;description;engagementMinutes)";
+                    }
+                    // Sets corresponding variables to broken up input parts
+                    String type = splitSearchCriteria[0];
+                    String name = splitSearchCriteria[1];
+                    String description = splitSearchCriteria[2];
+                    int engagementMinutes = Integer.parseInt(splitSearchCriteria[3]); // Could throw exception if not integer
+
+                    // Creates the artifact with the broken down, parsed input (and records the ID of the new artifact)
+                    String newArtifactsId = createArtifact(type, name, description, engagementMinutes);
+
+                    // createArtifact will return null if it fails to create so an error will be output if so:
+                    if(newArtifactsId == null) { return "ERROR - Failiure to create artifact; Potentially invalid input"; }
+
+                } catch (NumberFormatException e) {
+                    return "ERROR - Invalid engagementMinutes given; Needs to be an integer";
+                } catch (Exception e) {
+                    return "ERROR -" + e.getMessage(); // Returns exception as something bad has happened (something's wrong with code)
+                }
+        }
+        // Level 3 - Sub management options
+        return output;
     }
 
 }
