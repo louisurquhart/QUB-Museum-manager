@@ -33,7 +33,6 @@ public enum MenuStates {
     DELETE_ANNUAL_PLAN,
     UPDATE_ANNUAL_PLAN,
     ADD_EXHIBIT_TO_ANNUAL_PLAN,
-    DELETE_EXHIBIT_IN_ANNUAL_PLAN,
 
 
     // Menu level 4 states:

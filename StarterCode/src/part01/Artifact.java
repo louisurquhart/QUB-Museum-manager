@@ -32,4 +32,9 @@ public class Artifact {
     public void setDescription(String description) {this.description = description; }
     public void setId(String id) { this.id = id; }
     public void setEngagementMinutes(int engagementMinutes) { this.engagementMinutes = engagementMinutes; }
+
+    @Override
+    public String toString() {
+        return "Artifact [name=" + name + ", type=" + type + ", description=" + description + ", id=" + id +  ", engagementMinutes=" + engagementMinutes + "]";
+    }
 }

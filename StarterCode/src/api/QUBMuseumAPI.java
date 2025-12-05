@@ -229,7 +229,7 @@ public interface QUBMuseumAPI {
      * @param month The month number (1-12)
      * @return List of exhibit IDs scheduled for the specified hall and month
      */
-    public ArrayList<String> getAnnualPlanExhibits(String planId, String hall, int month) throws Exception;
+    public String getAnnualPlanExhibit(String planId, String hall, int month) throws Exception;
 
     /**
      * Removes an entire annual plan, clearing all scheduled exhibits for that year.

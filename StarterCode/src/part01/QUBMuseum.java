@@ -153,13 +153,13 @@ public class QUBMuseum implements QUBMuseumAPI {
                 Artifact artifact2 = matchingArtifacts.get(i + 1);
                 switch (sortBy) {
                     case "name":  // If the result of compareToIgnoreCase is > 0 (positive), It means that a swap's required as artifact 1s name is deeper in the alphabet compared to artifact 2s name
-                        if (artifact1.getName().compareToIgnoreCase(artifact2.getName()) > 0) { swapNeeded = true; }
+                        if (artifact1.getName().compareToIgnoreCase(artifact2.getName()) > 0) { swapNeeded = true; } break;
                     case "type": // If the result of compareToIgnoreCase is > 0 (positive), It means that a swap's required as artifact 1s type is deeper in the alphabet compared to artifact 2s type
-                        if (artifact1.getType().compareToIgnoreCase(artifact2.getType()) > 0) { swapNeeded = true; }
+                        if (artifact1.getType().compareToIgnoreCase(artifact2.getType()) > 0) { swapNeeded = true; } break;
                     case "id": // If the converted to int id of artifact1 is > artifact2's, they're swapped as it means that artifact 1's ID is higher than the next value
-                        if (Integer.parseInt(artifact1.getId()) > Integer.parseInt(artifact2.getId())) { swapNeeded = true; }
+                        if (Integer.parseInt(artifact1.getId()) > Integer.parseInt(artifact2.getId())) { swapNeeded = true; } break;
                     case "engagement":
-                        if (artifact1.getEngagementMinutes() > artifact2.getEngagementMinutes()) { swapNeeded = true; }
+                        if (artifact1.getEngagementMinutes() > artifact2.getEngagementMinutes()) { swapNeeded = true; } break;
                 }
                 if(swapNeeded) { // Switches the position of the two artifacts in the ArrayList
                     matchingArtifacts.set(i+1, artifact1);
@@ -285,9 +285,9 @@ public class QUBMuseum implements QUBMuseumAPI {
                 Exhibit exhibit2 = matchingExhibits.get(i + 1);
                 switch (sortBy) {
                     case "name":  // If the result of compareToIgnoreCase is > 0 (positive), It means that a swap's required as exhibit 1s name is deeper in the alphabet compared to exhibit 2s name
-                        if (exhibit1.getName().compareToIgnoreCase(exhibit2.getName()) > 0) { swapNeeded = true; }
+                        if (exhibit1.getName().compareToIgnoreCase(exhibit2.getName()) > 0) { swapNeeded = true; } break;
                     case "id": // If the converted to int id of exhibit1 is > exhibit2's, they're swapped as it means that exhibit 1's ID is higher than the next value
-                        if (Integer.parseInt(exhibit1.getId()) > Integer.parseInt(exhibit2.getId())) { swapNeeded = true; }
+                        if (Integer.parseInt(exhibit1.getId()) > Integer.parseInt(exhibit2.getId())) { swapNeeded = true; } break;
                     default: // TODO: throw exception
                 }
                 if(swapNeeded) { // Switches the position of the two exhibits in the ArrayList
@@ -379,6 +379,12 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public String createAnnualPlan(int year) throws Exception
 	{
+        // Validates annual plan at year doesn't already exist
+        for(AnnualPlan annualPlan: annualPlans.values()){
+            if(annualPlan.getYear() == year) {
+                throw new Exception("Annual plan with year " + year + " already exists");
+            }
+        }
         // Generates ID for annual plan + increments counts
         String id = Integer.toString(annualPlanIdCount);
         annualPlanIdCount++;
@@ -410,17 +416,16 @@ public class QUBMuseum implements QUBMuseumAPI {
 
     // DONE
 	@Override
-	public ArrayList<String> getAnnualPlanExhibits(String planId, String hall, int month) throws Exception
+	public String getAnnualPlanExhibit(String planId, String hall, int month) throws Exception
 	{
-        ArrayList<String> matchingExhibitIds = new ArrayList<>();
         AnnualPlan annualPlan = annualPlans.get(planId);
 
         for(Exhibit exhibit : annualPlan.getExhibits()) { // Goes through all exhibits -> checks if exhibits hall + month match input;
-            if(annualPlan.getExhibitMonth(exhibit) == month && annualPlan.getExhibitHall(exhibit).equals(hall) ){
-                matchingExhibitIds.add(exhibit.getId());  // If they match, the exhibits ID's added to matchingExhibitIds
+            if (annualPlan.getExhibitMonth(exhibit) == month && annualPlan.getExhibitHall(exhibit).equals(hall)) {
+                return exhibit.getId();// If they match, the exhibits IDs returned
             }
         }
-		return matchingExhibitIds; // Returns the ArrayList of all exhibits IDs which match the given hall + month
+        throw new Exception("Exhibit at given hall + month not found");
 	}
 
     // DONE
@@ -454,7 +459,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         switch (infoName) {
             case "year" ->  {
                 for(AnnualPlan plan : annualPlans.values()) { // Goes through all annualPlans to validate non have the given year
-                    if(plan.getYear() == Integer.parseInt(newValue)) { // If the year of the annualPlan's the same as the given value  bn
+                    if(plan.getYear() == Integer.parseInt(newValue)) { // If the year of the annualPlan's the same as the given value
                         throw new Exception("Invalid infoName given; Year already exists for an annual plan");
                     }
                 }
@@ -503,7 +508,8 @@ public class QUBMuseum implements QUBMuseumAPI {
                     1. Add an artifact
                     2. View an artifact
                     3. Delete an artifact
-                    4. Update an artifacts info
+                    4. Update an artifacts info5
+                    5. Go back
                     """;
         } else if(currentState == MenuStates.MANAGE_EXHIBITS) {
             return """
@@ -516,6 +522,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                     5. Add artifact to an exhibit
                     6. Delete artifact from an exhibit
                     7. Reorder artifacts in an exhibit
+                    8. Go back
                     """;
         } else if(currentState == MenuStates.MANAGE_ANNUAL_PLANS) {
             return """
@@ -526,7 +533,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                     3. Delete an annual plan
                     4. Update an annual plan info
                     5. Add an exhibit to an annual plan
-                    6. Delete an exhibit from an annual plan
+                    6. Go back
                     """;
         }
         // -------- MANAGE ARTIFACT METHODS --------
@@ -607,7 +614,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                     """;
         } else if(currentState == MenuStates.UPDATE_ANNUAL_PLAN) {
             return """
-                    Enter the annual plans ID:
+                    Enter the annual plans ID, New infos name and the new value
+                    - infoName options: year, id
+                    - newValue restrictions: (year - integer, id - integer)
+                    - Format: (planId, infoName; newValue) - ignoring brackets, no whitespace, semicolons separating each 
             """;
         } else if(currentState == MenuStates.DELETE_ANNUAL_PLAN) {
             return """
@@ -618,11 +628,9 @@ public class QUBMuseum implements QUBMuseumAPI {
             """;
         } else if(currentState == MenuStates.ADD_EXHIBIT_TO_ANNUAL_PLAN) {
             return """
-                    Enter exhibitID + annualPlanID:
-            """;
-        } else if(currentState == MenuStates.DELETE_EXHIBIT_IN_ANNUAL_PLAN) {
-            return """
-                    Enter exhibitID + annualPlanID:
+                            Enter exhibitID + annualPlanID + hall and month of exhibit:
+                            - Restrictions: month must be in integer format (1-12 = january - december)
+                            - Format: (exhibitID; annualPlanID, hall, month) - ignoring brackets, no whitespace, semicolons separating each
             """;
         }
         return "EXIT";
@@ -671,7 +679,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                         return "EXIT"; // Returns exit which in the main class will exit the program if returned
                 }
                 break;
-            // Level 2 - Manage options
+            // Level 2 - Manage options TODO: ADD GOBACK OPTIONS
             case MANAGE_ARTIFACTS:
                 switch (input) {
                     case "1": // Add an artifact option
@@ -689,6 +697,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                     case "4": // Update an artifact option
                         currentState = MenuStates.UPDATE_ARTIFACT;
                         output = "";
+                        break;
+                    case "5":
+                        currentState = MenuStates.MAIN_MENU;
+                        output = "Returning to main menu";
                         break;
                 }
                 break;
@@ -710,6 +722,22 @@ public class QUBMuseum implements QUBMuseumAPI {
                         currentState = MenuStates.UPDATE_EXHIBIT;
                         output = "";
                         break;
+                    case "5":
+                        currentState = MenuStates.ADD_ARTIFACT_TO_EXHIBIT;
+                        output = "";
+                        break;
+                    case "6":
+                        currentState = MenuStates.DELETE_ARTIFACT_IN_EXHIBIT;
+                        output = "";
+                        break;
+                    case "7":
+                        currentState = MenuStates.REORDER_ARTIFACTS_IN_EXHIBIT;
+                        output = "";
+                        break;
+                    case "8":
+                        currentState = MenuStates.MAIN_MENU;
+                        output = "Returning to main menu";
+                        break;
                 }
                 break;
             case MANAGE_ANNUAL_PLANS:
@@ -730,12 +758,20 @@ public class QUBMuseum implements QUBMuseumAPI {
                         currentState = MenuStates.UPDATE_ANNUAL_PLAN;
                         output = "";
                         break;
+                    case "5":
+                        currentState = MenuStates.ADD_EXHIBIT_TO_ANNUAL_PLAN;
+                        output = "";
+                        break;
+                    case "6":
+                        currentState = MenuStates.MAIN_MENU;
+                        output = "Returning to main menu";
+                        break;
                 }
                 break;
             case ADD_ARTIFACT:
                 try {
                     String[] splitSearchCriteria = input.split(";", 4);  // Splits input breaking it down into seperate variables
-                    if(splitSearchCriteria.length != 4) { // If there isn't 4 seperate varaibles after parsing, an error is returned
+                    if (splitSearchCriteria.length != 4) { // If there isn't 4 seperate varaibles after parsing, an error is returned
                         return "ERROR - Invalid format given; Invalid amount of parts. Format:(type;name;description;engagementMinutes)";
                     }
                     // Sets corresponding variables to broken up input parts
@@ -748,15 +784,283 @@ public class QUBMuseum implements QUBMuseumAPI {
                     String newArtifactsId = createArtifact(type, name, description, engagementMinutes);
 
                     // createArtifact will return null if it fails to create so an error will be output if so:
-                    if(newArtifactsId == null) { return "ERROR - Failiure to create artifact; Potentially invalid input"; }
+                    if (newArtifactsId == null) {
+                        return "ERROR - Failiure to create artifact; Potentially invalid input";
+                    }
 
                 } catch (NumberFormatException e) {
                     return "ERROR - Invalid engagementMinutes given; Needs to be an integer";
                 } catch (Exception e) {
                     return "ERROR -" + e.getMessage(); // Returns exception as something bad has happened (something's wrong with code)
                 }
+                output = "Artifact added successfully"; // If no errors caused early return, its assumed artifact creation was success.
+                currentState = MenuStates.MANAGE_ARTIFACTS;
+                break;
+            case VIEW_ARTIFACT:
+                try {
+                    // Splits input into separate variables:
+                    String[] splitSearchCriteria = input.split(";", 2);
+                    String searchCriteria = splitSearchCriteria[0];
+                    String sortBy = splitSearchCriteria[1];
+
+                    // Calls find artifact
+                    ArrayList<String> foundArtifactIds = findArtifacts(searchCriteria, sortBy);
+
+                    if(foundArtifactIds.size() == 0) { // If no artifact IDs are returned
+                        return "No artifacts found under given search criteria";
+                    }
+                    for (String artifactId : foundArtifactIds ) { // Combines all artifacts toString results in a loop
+                        output = output + (artifacts.get(artifactId).toString() + "\n");
+                    }
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage(); // Unknown exception thrown, returned to user; probably to do with code
+                }
+                currentState = MenuStates.MANAGE_ARTIFACTS;
+                break;
+            case DELETE_ARTIFACT: // Artifact ID is input for this
+                try {
+                    Artifact artifact = artifacts.get(input); // Gets artifact using its ID
+                    if (artifact != null) { // If artifact exists in the hashmap (ID is valid)
+                        deleteArtifact(input); // Delete artifacts called
+                    } else {
+                        return "ERROR - Artifact ID is not found, ID given likely invalid.";
+                    }
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage(); // probs something wrong with code
+                }
+                output =  "Artifact deleted successfully";
+                currentState = MenuStates.MANAGE_ARTIFACTS;
+                break;
+            case UPDATE_ARTIFACT:
+               try {
+                   // Splits input up into separate variables
+                   String[] splitSearchCriteria = input.split(";", 3);
+                   String artifactId = splitSearchCriteria[0];
+                   String infoName = splitSearchCriteria[1].toLowerCase();
+                   String newValue =  splitSearchCriteria[2].toLowerCase();
+
+                   // Attempts to validate user input. All other invalid inputs will be caught by exception
+                   if(artifacts.get(artifactId) == null) { // Validates artifact exists. If if statements true it doesn't
+                       return "ERROR - Artifact ID is not found, ID given likely invalid.";
+                   }
+                   else if(!(infoName.equals("name") || infoName.equals("type") || infoName.equals("description") || infoName.equals("engagementMinutes"))) {
+                       return "ERROR - Given infoName is invalid, must be either name, type, description or engagementMinutes";
+                   }
+                   else if(newValue == null) {
+                       return "ERROR - newValue is null";
+                   }
+                   // If basic validation passes, updateArtifactInfo is called with variables inputted
+                   updateArtifactInfo(artifactId, infoName, newValue);
+               } catch (Exception e) { // TODO: COULD MAYBE CHECK IF INVALID INTEGER EXCEPTION IF ENGAGEMENTMINUTES ISNT INT
+                   return "ERROR - " +  e.getMessage(); // Could be due to code OR invalid user input
+               }
+               output = "Artifact updated successfully";
+                currentState = MenuStates.MANAGE_ARTIFACTS;
+               break;
+            // EXHIBIT STUFF
+            case ADD_EXHIBIT:
+                try {
+                    String[] splitSearchCriteria = input.split(";", 2);  // Splits input into separate variables
+                    if (splitSearchCriteria.length != 2) { // If there isn't 2 seperate varaibles after parsing, an error is returned
+                        return "ERROR - Invalid format given; Invalid amount of parts. Format:(name; description)";
+                    }
+                    // Sets corresponding variables to broken up input parts
+                    String name = splitSearchCriteria[0];
+                    String description = splitSearchCriteria[1];
+
+                    // Validates the name/descriptions not null
+                    if (name == null || description == null) {
+                        return "ERROR - Given name or description is null.";
+                    }
+
+                    // Creates the artifact with the broken down, parsed input (and records the ID of the new artifact)
+                    String newExhibitsId = createExhibit(name, description);
+
+                    // createExhibit will return null if it fails to create so an error will be output if so:
+                    if (newExhibitsId == null) {
+                        return "ERROR - Failure to create exhibit; Potentially invalid input";
+                    }
+                } catch (Exception e) {
+                    return "ERROR -" + e.getMessage(); // Returns exception as something bad has happened (something's wrong with code)
+                }
+                output = "Exhibit added successfully"; // If no errors caused early return, its assumed exhibits creation was success.
+                currentState = MenuStates.MANAGE_EXHIBITS;
+                break;
+            case VIEW_EXHIBIT:
+                try {
+                    // Splits input into separate variables:
+                    String[] splitSearchCriteria = input.split(";", 2);
+                    String searchCriteria = splitSearchCriteria[0];
+                    String sortBy = splitSearchCriteria[1];
+
+                    // Calls find exhibits (records id too to validate it exists)
+                    ArrayList<String> foundExhibitIds = findExhibits(searchCriteria, sortBy);
+
+                    if(foundExhibitIds.size() == 0) { // If no IDs are returned
+                        return "No artifacts found under given search criteria";
+                    }
+                    for (String exhibitId : foundExhibitIds ) { // Combines all IDs toString() methods results using a loop
+                        output = output + (exhibits.get(exhibitId).toString() + "\n");
+                    }
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage(); // Unknown exception thrown, returned to user; probably to do with code
+                }
+                currentState = MenuStates.MANAGE_EXHIBITS;
+                break;
+            case DELETE_EXHIBIT:
+                try {
+                    Exhibit exhibit = exhibits.get(input); // Gets object using its ID
+                    if (exhibit != null) { // If exhibit exists in the hashmap (ID is valid)
+                        deleteExhibit(input); // The exhibits deleted
+                    } else {
+                        return "ERROR - Exhibit ID is not found, ID given likely invalid.";
+                    }
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage(); // Probably something wrong with code
+                }
+                output =  "Artifact deleted successfully";
+                currentState = MenuStates.MANAGE_EXHIBITS;
+                break;
+            case UPDATE_EXHIBIT:
+                try {
+                    // Splits input up into separate variables
+                    String[] splitSearchCriteria = input.split(";", 3);
+                    String exhibitId = splitSearchCriteria[0];
+                    String infoName = splitSearchCriteria[1];
+                    String newValue =  splitSearchCriteria[2];
+
+                    // Attempts to validate user input. All other invalid inputs will be caught by exception
+                    if(exhibits.get(exhibitId) == null) { // Validates object exists. (If the statements true it doesn't)
+                        return "ERROR - Exhibit ID is not found, ID given likely invalid.";
+                    }
+                    else if(!(infoName.equals("name") || infoName.equals("description"))) {
+                        return "ERROR - Given infoName is invalid, must be either name or description";
+                    }
+                    else if(newValue == null) {
+                        return "ERROR - newValue is null";
+                    }
+                    // If basic validation passes, updateExhibitInfo is called with variables inputted
+                    updateExhibitInfo(exhibitId, infoName, newValue);
+                } catch (Exception e) { // Catches all other errors
+                    return "ERROR - " +  e.getMessage(); // Could be due to code OR invalid user input
+                }
+                output =  "Exhibit updated successfully";
+                currentState = MenuStates.MANAGE_EXHIBITS;
+                break;
+            case ADD_ARTIFACT_TO_EXHIBIT:
+                try {
+                    // Splits input values into seperate variables
+                    String[] splitSearchCriteria = input.split(";", 3);
+                    String artifactId = splitSearchCriteria[0];
+                    String exhibitId = splitSearchCriteria[1];
+                    String sign = splitSearchCriteria[2];
+
+                    if(artifacts.get(artifactId) == null || exhibits.get(exhibitId) == null) { // If exhibit/artifact ID doesn't exist
+                        return "ERROR - Artifact or Exhibit ID not found.";
+                    }
+                    addArtifactToExhibit(artifactId, exhibitId, sign); // If ID's exist it's attempted to add artifact to the exhibit
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage();
+                }
+                output = "Artifact added to exhibit successfully";
+                break;
+            case DELETE_ARTIFACT_IN_EXHIBIT:
+                try {
+                    // Splits input values into separate variables
+                    String[] splitSearchCriteria = input.split(";", 2);
+                    String artifactId = splitSearchCriteria[0];
+                    String exhibitId = splitSearchCriteria[1];
+
+                    if(exhibits.get(exhibitId) == null ||  artifacts.get(artifactId) == null) {
+                        return "ERROR - Artifact or Exhibit ID not found.";
+                    }
+                    removeArtifactFromExhibit(artifactId, exhibitId); // Removes artifact
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage();
+                }
+                currentState = MenuStates.MANAGE_EXHIBITS;
+                break;
+            case REORDER_ARTIFACTS_IN_EXHIBIT:
+                try {
+                    // Breaks up initial input into exhibit + artifact IDs
+                    String[] splitSearchCriteria = input.split(";", 2);
+                    String exhibitId = splitSearchCriteria[0];
+                    String artifactIds = splitSearchCriteria[1];
+
+                    // Further breaks up artifactId's into separate values
+                    String[] splitArtifactIds= input.split(",", 0);
+
+                    // Converts to arraylist for reorderExhibitArtifacts()
+                    ArrayList<String> splitArtifactIdsList = new ArrayList<>();
+
+                    for(String artifactId : splitArtifactIds) { splitArtifactIdsList.add(artifactId); }
+
+                    reorderExhibitArtifacts(exhibitId, splitArtifactIdsList);
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage();
+                }
+                currentState = MenuStates.MANAGE_EXHIBITS;
+                break;
+            case ADD_ANNUAL_PLAN:
+                try {
+                    createAnnualPlan(Integer.parseInt(input)); // Tries to create annual plan
+                } catch(Exception e) { // If it fails exceptions thrown
+                    return "ERROR - " +  e.getMessage(); // Likely to do with invalid year but could also be code
+                }
+                output = "Annual plan added successfully";
+                currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                break;
+            case VIEW_ANNUAL_PLAN:
+                try {
+                    String planId = getAnnualPlan(Integer.parseInt(input));
+                    output = annualPlans.get(planId).toString();
+                } catch (Exception e) {
+                    return "ERROR - " +  e.getMessage(); // Likely that no annual plan was found
+                }
+                currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                break;
+            case DELETE_ANNUAL_PLAN:
+                try {
+                    deleteAnnualPlan(input);
+                } catch(Exception e) {
+                    return "ERROR - " +  e.getMessage();
+                }
+                output = "Annual plan deleted successfully";
+                currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                break;
+            case UPDATE_ANNUAL_PLAN:
+                try {
+                    // Splits up input into separate variables
+                    String[] splitSearchCriteria = input.split(";", 3);
+                    String planId = splitSearchCriteria[0];
+                    String infoName = splitSearchCriteria[1];
+                    String newValue =  splitSearchCriteria[2];
+                    updateAnnualPlanInfo(planId, infoName, newValue);
+                } catch (Exception e) {
+                    return "ERROR - " +  e.getMessage();
+                }
+                output =  "Annual plan updated successfully";
+                currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                break;
+            case ADD_EXHIBIT_TO_ANNUAL_PLAN:
+                try {
+                    // Splits up input into separate variables
+                    String[] splitSearchCriteria = input.split(";", 4);
+                    String exhibitId = splitSearchCriteria[0];
+                    String annualPlanId = splitSearchCriteria[1];
+                    String hall = splitSearchCriteria[2];
+                    String month = splitSearchCriteria[3];
+
+                    addExhibitToAnnualPlan(exhibitId, annualPlanId, hall, Integer.parseInt(month));
+                } catch(NumberFormatException e) {
+                    return "ERROR - Invalid month format. Must be an integer (1-12)";
+                }  catch (Exception e) {
+                    return "ERROR - " +  e.getMessage();
+                }
+                output = "Exhibit added to annualPlan successfully";
+                currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                break;
         }
-        // Level 3 - Sub management options
         return output;
     }
 

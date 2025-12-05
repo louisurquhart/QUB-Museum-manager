@@ -52,4 +52,8 @@ public class Exhibit {
         this.artifacts.remove(artifact); // Removes artifact from artifacts arrayList
     }
 
+    public String toString() {
+// TODO: Figure out how to output artifacts paired with their signs
+        return "Artifact [name=" + name + ", description=" + description + ", id=" + id + "\n Artifacts contained: ]";
+    }
 }
