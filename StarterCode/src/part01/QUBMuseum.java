@@ -47,6 +47,9 @@ public class QUBMuseum implements QUBMuseumAPI {
     // DONE
 	@Override
 	public String createArtifact(String type, String name, String description, int engagementMinutes) throws Exception {
+        if(engagementMinutes >= 0 || type.isBlank() || name.isBlank() || description.isBlank()) {
+            return null;
+        }
         try {
             String id = Integer.toString(artifactIdCount); // Creates an incremental ID for the new artifact (+1 of previous artifacts ID)
             artifactIdCount++; // Increments ID count
@@ -64,14 +67,19 @@ public class QUBMuseum implements QUBMuseumAPI {
 	{
         // Finds the artifact using its ID as a key for the artifacts hashmap
         Artifact artifact = artifacts.get(artifactId);
+        if(artifact == null) { return null; } // Returns null if artifact not found
         // Depending on infoName, it then returns the appropiate info (info names based off the API documentation)
-        return switch (infoName) {
-            case "name" -> artifact.getName();
-            case "type" -> artifact.getType();
-            case "description" -> artifact.getDescription();
-            case "engagement_minutes" -> Integer.toString(artifact.getEngagementMinutes());
-            default -> null;
-        };
+        try {
+            return switch (infoName.toLowerCase()) { // Puts it to lowercase to remove accidental capitalisation typos
+                case "name" -> artifact.getName();
+                case "type" -> artifact.getType();
+                case "description" -> artifact.getDescription();
+                case "engagement_minutes" -> Integer.toString(artifact.getEngagementMinutes());
+                default -> null;
+            };
+        } catch(NumberFormatException e) {
+            return null; // Returns null if infoName is invalid (not int for engagement minutes) inline with docs
+        }
     }
     // DONE
 	@Override
@@ -85,6 +93,13 @@ public class QUBMuseum implements QUBMuseumAPI {
         // Finds the artifact using its ID as a key for the artifacts hashmap
         Artifact artifact = artifacts.get(artifactId);
 
+        // Validates new value isn't empty/whitespace
+        if(newValue.isBlank()) { throw new Exception("newValue cannot be empty"); }
+
+        // Validates if engagement_minutes the value isn't negative:
+        if(infoName.equals("engagement_minutes") && Integer.parseInt(newValue) <= 0) {
+            throw new Exception("engagement_minutes cannot be less than or equal to 0");
+        }
         // Depending on infoName, it then returns the appropriate
         switch (infoName) {
             case "name" -> artifact.setName(newValue);
@@ -366,6 +381,10 @@ public class QUBMuseum implements QUBMuseumAPI {
         for(Artifact artifact : exhibit.getArtifacts()) {
             exhibitSignsCopy.put(artifact, exhibit.getArtifactSign(artifact));
         }
+        // Clears the exhibits preexisting list of artifacts ready for it to be replaced with a reordered list.
+        ArrayList<Artifact> blankArtifactArrayList = new ArrayList<>();
+        exhibit.setArtifacts(blankArtifactArrayList);
+
         // Then, it goes through the list of given artifactIds in order, adding each artifact paired with its saved sign in order
         for (String artifactId : artifactIds) {
             Artifact artifact = artifacts.get(artifactId); // Finds artifact using its ID from artifactIds
@@ -492,145 +511,145 @@ public class QUBMuseum implements QUBMuseumAPI {
         // LEVEL 1 STATE:
         if(currentState == MenuStates.MAIN_MENU) {
             return """
-                    MAIN MENU
-                    Options:
-                    1. Manage Artifacts
-                    2. Manage Exhibits
-                    3. Manage Annual Plans
-                    4. Exit programme
-                    """;
+            MAIN MENU
+            Options:
+            1. Manage Artifacts
+            2. Manage Exhibits
+            3. Manage Annual Plans
+            4. Exit programme
+            """;
         }
         // LEVEL 2 STATES:
         else if (currentState == MenuStates.MANAGE_ARTIFACTS) {
             return """
-                    MANAGE ARTIFACTS MENU
-                    Options:
-                    1. Add an artifact
-                    2. View an artifact
-                    3. Delete an artifact
-                    4. Update an artifacts info5
-                    5. Go back
-                    """;
+            MANAGE ARTIFACTS MENU
+            Options:
+            1. Add an artifact
+            2. View an artifact
+            3. Delete an artifact
+            4. Update an artifacts info5
+            5. Go back
+            """;
         } else if(currentState == MenuStates.MANAGE_EXHIBITS) {
             return """
-                    MANAGE EXHIBITS MENU
-                    Options:
-                    1. Add an exhibit
-                    2. View an exhibit
-                    3. Delete an exhibit
-                    4. Update an exhibits info
-                    5. Add artifact to an exhibit
-                    6. Delete artifact from an exhibit
-                    7. Reorder artifacts in an exhibit
-                    8. Go back
-                    """;
+            MANAGE EXHIBITS MENU
+            Options:
+            1. Add an exhibit
+            2. View an exhibit
+            3. Delete an exhibit
+            4. Update an exhibits info
+            5. Add artifact to an exhibit
+            6. Delete artifact from an exhibit
+            7. Reorder artifacts in an exhibit
+            8. Go back
+            """;
         } else if(currentState == MenuStates.MANAGE_ANNUAL_PLANS) {
             return """
-                    MANAGE ANNUAL_PLANS MENU
-                    Options:
-                    1. Add an annual plan
-                    2. View an annual plan
-                    3. Delete an annual plan
-                    4. Update an annual plan info
-                    5. Add an exhibit to an annual plan
-                    6. Go back
-                    """;
+            MANAGE ANNUAL_PLANS MENU
+            Options:
+            1. Add an annual plan
+            2. View an annual plan
+            3. Delete an annual plan
+            4. Update an annual plan info
+            5. Add an exhibit to an annual plan
+            6. Go back
+            """;
         }
         // -------- MANAGE ARTIFACT METHODS --------
         else if(currentState == MenuStates.ADD_ARTIFACT) {
             return """
-                    Enter the new artifacts type, name, description, engagement minutes in format:
-                    (type;name;description;engagementMinutes)
+            Enter the new artifacts type, name, description, engagement minutes in format:
+            (type;name;description;engagementMinutes)
             """;
         } else if(currentState == MenuStates.VIEW_ARTIFACT) {
             return """
-                    Enter the artifacts property type + value + how to sort the matching artifacts.
-                    - searchType options: type, name, name_contains, id, null (blank)
-                    - sortBy options: name, type, id, engagement, null (blank)
-                    - null (blank) for searchType returns all artifacts; null for sortBy returns in ID order
-                    - Format: (searchType=searchValue;sortBy) - ignoring brackets, no whitespace, semicolons separating each value
+            Enter the artifacts property type + value + how to sort the matching artifacts.
+            - searchType options: type, name, name_contains, id, null (blank)
+            - sortBy options: name, type, id, engagement, null (blank)
+            - null (blank) for searchType returns all artifacts; null for sortBy returns in ID order
+            - Format: (searchType=searchValue;sortBy) - ignoring brackets, no whitespace, semicolons separating each value
             """;
         } else if(currentState == MenuStates.DELETE_ARTIFACT) {
             return """
-                    Enter the artifacts ID:
+            Enter the artifacts ID:
             """;
         } else if(currentState == MenuStates.UPDATE_ARTIFACT) {
             return """
-                    Enter the artifacts ID + the information to updates name + the value to replace the info
-                    - infoName options: name, type, description, engagement_minutes
-                    - newValue restrictions (name/type/description - Continuous string, engagement_minutes - Integer)
-                    - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
-                    """;
+            Enter the artifacts ID + the information to updates name + the value to replace the info
+            - infoName options: name, type, description, engagement_minutes
+            - newValue restrictions (name/type/description - Continuous string, engagement_minutes - Integer)
+            - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+            """;
         }
         // -------- MANAGE EXHIBITS METHODS --------
         else if(currentState == MenuStates.ADD_EXHIBIT) {
             return """
-                    Enter the new exhibits name and description in format:
-                    (name;description)
+            Enter the new exhibits name and description in format:
+            (name;description)
             """;
         } else if(currentState == MenuStates.VIEW_EXHIBIT) {
             return """
-                    Enter the exhibits property type + value + how to sort the matching exhibits.
-                    - searchType options: name, name_contains, id, null (blank)
-                    - sortBy options: name, id, null (blank)
-                    - null (blank) for searchType returns all exhibits; null for sortBy returns in ID order
-                    - Format: (searchType=searchValue;sortBy) - ignoring brackets, no whitespace, semicolons separating each value
+            Enter the exhibits property type + value + how to sort the matching exhibits.
+            - searchType options: name, name_contains, id, null (blank)
+            - sortBy options: name, id, null (blank)
+            - null (blank) for searchType returns all exhibits; null for sortBy returns in ID order
+            - Format: (searchType=searchValue;sortBy) - ignoring brackets, no whitespace, semicolons separating each value
             """;
         } else if (currentState == MenuStates.DELETE_EXHIBIT) {
             return """
-                    Enter the exhibits ID:
+            Enter the exhibits ID:
             """;
         } else if (currentState == MenuStates.UPDATE_EXHIBIT) {
             return """
-                    Enter the exhibits ID + the information to updates name + the value to replace the info
-                    - infoName options: name, description
-                    - newValue restrictions (name/type/description - Continuous string, engagement_minutes - Integer)
-                    - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
-                    """;
+            Enter the exhibits ID + the information to updates name + the value to replace the info
+            - infoName options: name, description
+            - newValue restrictions (name/type/description - Continuous string, engagement_minutes - Integer)
+            - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+            """;
         } else if(currentState == MenuStates.ADD_ARTIFACT_TO_EXHIBIT) {
             return """
-                    Enter artifacts ID, the exhibits ID and the sign to go with the artifact
-                    - Format: (artifactID;exhibitID,sign)
-                    """;
+            Enter artifacts ID, the exhibits ID and the sign to go with the artifact
+            - Format: (artifactID;exhibitID,sign)
+            """;
         } else if(currentState == MenuStates.DELETE_ARTIFACT_IN_EXHIBIT) {
             return """
-                    Enter artifacts ID + exhibits ID
-                    - Format: (artifactID;exhibitID) - ignoring brackets, no whitespace, semicolons separating each value
+            Enter artifacts ID + exhibits ID
+            - Format: (artifactID;exhibitID) - ignoring brackets, no whitespace, semicolons separating each value
             """;
         } else if(currentState == MenuStates.REORDER_ARTIFACTS_IN_EXHIBIT) {
             return """
-                    Enter exhibitID + List of artifact ID's in a new order (ID's must all already exist in exhibit + not repeat)
-                    Format: (exhibitID;artifactID1,artifactID2,...) - ignoring brackets, no whitespace, semicolons separating each value.
+            Enter exhibitID + List of artifact ID's in a new order (ID's must all already exist in exhibit + not repeat)
+            Format: (exhibitID;artifactID1,artifactID2,...) - ignoring brackets, no whitespace, semicolons separating each value.
             """;
         }
         // -------- MODIFY ANNUAL PLAN METHODS --------
         else if(currentState == MenuStates.ADD_ANNUAL_PLAN) {
             return """
-                    Enter new annual plans year:
-                    """;
+            Enter new annual plans year:
+            """;
         } else if(currentState == MenuStates.VIEW_ANNUAL_PLAN) {
             return """
-                    Enter annual plans year:
-                    """;
+            Enter annual plans year:
+            """;
         } else if(currentState == MenuStates.UPDATE_ANNUAL_PLAN) {
             return """
-                    Enter the annual plans ID, New infos name and the new value
-                    - infoName options: year, id
-                    - newValue restrictions: (year - integer, id - integer)
-                    - Format: (planId, infoName; newValue) - ignoring brackets, no whitespace, semicolons separating each 
+            Enter the annual plans ID, New infos name and the new value
+            - infoName options: year, id
+            - newValue restrictions: (year - integer, id - integer)
+            - Format: (planId, infoName; newValue) - ignoring brackets, no whitespace, semicolons separating each 
             """;
         } else if(currentState == MenuStates.DELETE_ANNUAL_PLAN) {
             return """
-                    Enter the annual plans ID + the information to updates name + the value to replace the info
-                    - infoName options: year, id
-                    - newValue restrictions (year/id - Integers)
-                    - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+            Enter the annual plans ID + the information to updates name + the value to replace the info
+            - infoName options: year, id
+            - newValue restrictions (year/id - Integers)
+            - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
             """;
         } else if(currentState == MenuStates.ADD_EXHIBIT_TO_ANNUAL_PLAN) {
             return """
-                            Enter exhibitID + annualPlanID + hall and month of exhibit:
-                            - Restrictions: month must be in integer format (1-12 = january - december)
-                            - Format: (exhibitID; annualPlanID, hall, month) - ignoring brackets, no whitespace, semicolons separating each
+            Enter exhibitID + annualPlanID + hall and month of exhibit:
+            - Restrictions: month must be in integer format (1-12 = january - december)
+            - Format: (exhibitID; annualPlanID, hall, month) - ignoring brackets, no whitespace, semicolons separating each
             """;
         }
         return "EXIT";
@@ -639,7 +658,58 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
     public boolean isValidInput(String input) 
     {
-    	return true;
+//        switch(currentState) { // Switch statements to show valid inputs for each
+//            case MAIN_MENU:
+//                try {
+//                    int inputInteger = Integer.parseInt(input);
+//                    if (inputInteger <= 0 || inputInteger > 4) { // If input isn't 1-4 for a menu option
+//                        return false; // False is returned as its invalid
+//                    }
+//                } catch(NumberFormatException e) {
+//                    return false; // Inputs not a number
+//                }
+//                break;
+//            case MANAGE_ARTIFACTS:
+//                try {
+//                    int inputInteger = Integer.parseInt(input);
+//                    if (inputInteger <= 0 || inputInteger > 5) { // If input isn't 1-5 for a menu option
+//                        return false; // False is returned as its invalid
+//                    }
+//                } catch(NumberFormatException e) {
+//                    return false; // Inputs not a number
+//                }
+//                break;
+//            case MANAGE_EXHIBITS:
+//                try {
+//                    int inputInteger = Integer.parseInt(input);
+//                    if (inputInteger <= 0 || inputInteger > 8) { // If input isn't 1-8 for a menu option
+//                        return false; // False is returned as its invalid
+//                    }
+//                } catch(NumberFormatException e) {
+//                    return false; // Inputs not a number
+//                }
+//            case MANAGE_ANNUAL_PLANS:
+//                try {
+//                    int inputInteger = Integer.parseInt(input);
+//                    if (inputInteger <= 0 || inputInteger > 6) { // If input isn't 1-8 for a menu option
+//                        return false; // False is returned as its invalid
+//                    }
+//                } catch(NumberFormatException e) {
+//                    return false; // Inputs not a number
+//                }
+//            case ADD_ARTIFACT:
+//                String[] splitSearchCriteria = input.split(";", 4);  // Splits input breaking it down into seperate variables
+//                if (splitSearchCriteria.length != 4) { // If there isn't 4 seperate varaibles after parsing its invalid
+//                    return false;
+//                } else if(splitSearchCriteria[0])
+//                try { // Checks that the
+//                    Integer.parseInt(splitSearchCriteria[3]);
+//                }
+//             }end of switch statement
+
+        //return true; // If any of the statements above haven't found input invalid it's assumed to be valid
+
+        return false;
     }
     
 	@Override
@@ -779,7 +849,6 @@ public class QUBMuseum implements QUBMuseumAPI {
                     String name = splitSearchCriteria[1];
                     String description = splitSearchCriteria[2];
                     int engagementMinutes = Integer.parseInt(splitSearchCriteria[3]); // Could throw exception if not integer
-
                     // Creates the artifact with the broken down, parsed input (and records the ID of the new artifact)
                     String newArtifactsId = createArtifact(type, name, description, engagementMinutes);
 
@@ -806,6 +875,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                     // Calls find artifact
                     ArrayList<String> foundArtifactIds = findArtifacts(searchCriteria, sortBy);
 
+                    output = ""; // Clears output from before so concatination works properly
                     if(foundArtifactIds.size() == 0) { // If no artifact IDs are returned
                         return "No artifacts found under given search criteria";
                     }
@@ -963,6 +1033,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                     return "ERROR - " +  e.getMessage();
                 }
                 output = "Artifact added to exhibit successfully";
+                currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case DELETE_ARTIFACT_IN_EXHIBIT:
                 try {
@@ -988,7 +1059,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                     String artifactIds = splitSearchCriteria[1];
 
                     // Further breaks up artifactId's into separate values
-                    String[] splitArtifactIds= input.split(",", 0);
+                    String[] splitArtifactIds = artifactIds.split(",", 0);
 
                     // Converts to arraylist for reorderExhibitArtifacts()
                     ArrayList<String> splitArtifactIdsList = new ArrayList<>();

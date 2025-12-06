@@ -17,6 +17,7 @@ public class Artifact {
         setType(type);
         setDescription(description);
         setEngagementMinutes(engagementMinutes);
+        setId(id);
     }
 
     // Getter methods

@@ -42,6 +42,7 @@ public class Exhibit {
     public void setDescription(String description) { this.description = description; }
     public void setId(String id) { this.id = id; }
     public void setArtifactSign(Artifact artifact) { this.artifactSigns.put(artifact, artifactSigns.get(artifact)); }
+    public void setArtifacts(ArrayList<Artifact> artifacts) { this.artifacts = artifacts; }
 
     public void addArtifact(Artifact artifact, String artifactSign) {
         this.artifacts.add(artifact); // Adds artifact to artifacts arraylist:
