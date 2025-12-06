@@ -47,7 +47,7 @@ public class QUBMuseum implements QUBMuseumAPI {
     // DONE
 	@Override
 	public String createArtifact(String type, String name, String description, int engagementMinutes) throws Exception {
-        if(engagementMinutes >= 0 || type.isBlank() || name.isBlank() || description.isBlank()) {
+        if(engagementMinutes <= 0 || type.isBlank() || name.isBlank() || description.isBlank()) {
             return null;
         }
         try {
@@ -195,6 +195,9 @@ public class QUBMuseum implements QUBMuseumAPI {
     // DONE
 	@Override
 	public String createExhibit(String name, String description) throws Exception  {
+        if(name.isBlank() || description.isBlank()) { // Valides name/description aren't null/whitespace
+            return null; // If they are it returns null inline with documentation
+        }
         try {
             String id = Integer.toString(exhibitIdCount);
             exhibitIdCount++; // Increments id count
@@ -237,7 +240,7 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public void updateExhibitInfo(String exhibitId, String infoName, String newValue) throws Exception
 	{
-        if(newValue.isEmpty()) { throw new Exception("New value cannot be empty"); } // Validates newValue isn't empty
+        if(newValue.isBlank()) { throw new Exception("New value cannot be empty"); } // Validates newValue isn't empty
 
 		Exhibit exhibit = exhibits.get(exhibitId);
         switch (infoName) {
