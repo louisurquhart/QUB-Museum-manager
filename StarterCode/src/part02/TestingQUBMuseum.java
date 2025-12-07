@@ -18,8 +18,6 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
     	tester.runArtifactCRUDTests();
     	tester.runExhibitCRUDTests();
     	tester.runAnnualPlanCRUDTests();
-
-        //Add additional tests unit tests to cover any advanced functionality
         
         // END-TO-END TESTS
 
@@ -33,13 +31,16 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         // is working correctly
         tester.runFuzzingTests();
     }
-// example safe test artifacts
+// Example safe test artifacts
 //    String id2 = api.createArtifact("Sculpture", "Acropolis Statues", "Cool statues", 5);
 //    String id3 = api.createArtifact("Digital", "Incas Interactive", "Digital artifact to learn about incas", 10);
 //    String id4 = api.createArtifact("Tactile", "TouchIt", "Weird electric thingy which you touch (i assume)", 8);
-    
+
+
+    // Check this isn't just for advanced JSON funcitonality saving stuff
 	@Override
     public void runArtifactCRUDTests()  {
+        // Records tests done and test passes
         int testPasses = 0;
         int testFailures = 0;
 
@@ -58,7 +59,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             testPasses++;
         } else { testFailures++; }
 
-        System.out.println("- Invalid cases: ");
+        System.out.println(" - Invalid cases:  ");
         // --- INVALID CASES - Invalid cases to test if validation for methods catch them with null return/exception
         // Invalid case A:
         if(invalidArtifactCreationTester("Painting", "Delaware Landscape","Landscape of delaware in the US", -10)) {
@@ -80,7 +81,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         // TODO: MAYBE FIND + SORT ARTIFACT TESTS MAYBE
 
         // --- UPDATE ARTIFACT TESTS ---
-        System.out.println("--- ARTIFACT UPDATION TESTS --- ");
+        System.out.println("--- ARTIFACT UPDATION TESTS ---- ");
         // Creates a new artifact for testing:
         String testArtifactid = null;
         try {
@@ -123,7 +124,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             if(invalidArtifactUpdaterTester(testArtifactid, "   ", "Test value")) {
                 testPasses++;
             } else { testFailures++; }
-
+            System.out.println("invalid engagement minute infonames...");
             // Tests invalid engagement_minutes infoname
             if (invalidArtifactUpdaterTester(testArtifactid, "engagement_minutes", "Invalid value")) { // Tests non integer
                 testPasses++;
@@ -152,7 +153,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                     System.out.println("PASS - Artifact deletion presumed success as it can no longer be found");
                     testPasses++;
                 } else {
-                    System.out.println("FAIL - Artifact deletion failed as values can still be pulled using its ID");
+                    System.out.println("FAIL -  Artifact deletion failed as values can still be pulled using its ID");
                     testFailures++;
                 }
             } catch(Exception e) { // If an exceptions caused somehow
@@ -160,11 +161,17 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                 testFailures++;
             }
         } else {
-            System.out.println("Delete artifact test setup failed. Test artifact ID is null");
+            System.out.println("Delete artifact test setup failed, test artifact ID is null");
             testFailures++;
         }
 
+        // TODO: OUTPUT OF ALL TESTING RESULTS:
+
+        System.out.println("\nARTIFACT CRUD TESTS:\nTests done: " + (testPasses + testFailures) + "Tests failed" + testFailures + "\n\n"); // Outputs test results like in menu tests
+
     }
+
+    // TODO: COULD PROBABLY MERGE VALID + INVALID METHODS INTO ONE WITH SOME IF STATEMENTS FOR NEATER CODE
     // Tester for creating artifacts with valid parameters
     private boolean validArtifactCreationTester(String type, String name, String description, int engagementMinutes) {
         try {
@@ -172,7 +179,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
 
             // Verifies newly created object exists + variables all match using verfiyArtifactVariables()
             if(verifyArtifactVaraibles(testObjectId, type, name, description, engagementMinutes)) {
-                System.out.println("PASS - Artifact creation success. All stored values match inputted");
+                System.out.println("PASS - Artifact creation successful, stored values match inputted");
                 return true; // If pass true is returned
             } else { return false; } // if fails it returns false
 
@@ -195,10 +202,12 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                 return true;
             }
         } catch (Exception e) {
-            System.out.println("PARTIAL FAIL - Object creation threw exception instead of returning null when given invalid parameters");
+            System.out.println("PARTIAL FAIL - object creation threw exception instead of returning null when given invalid parameters");
             return false;
         }
     }
+
+    // TODO: COULD PROBABLY MERGE VALID + INVALID METHODS INTO ONE WITH SOME IF STATEMENTS FOR NEATER CODE
     // Tester for updating artifacts with valid parameters
     private boolean validArtifactUpdaterTester(String artifactId, String infoName, String newValue) {
         try {
@@ -263,6 +272,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
     @Override
     public void runExhibitCRUDTests()
     {
+        // Saves test results
         int testPasses = 0;
         int testFailures = 0;
 
@@ -279,22 +289,22 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             testPasses++;
         } else { testFailures++; }
 
-        // --- INVALID CASES - Invalid cases to test if validation for methods catch them with null return/exception
+        // --- INVALID CASES: Invalid cases to test if validation for methods catch them with null/exception
         // Can only test for whitespace/no value
         System.out.println("- Invalid cases: ");
         // Invalid case A:
-        if(invalidExhibitCreationTester(" ", "Warming of the planet due to greenhouse gasses")) {
+        if(invalidExhibitCreationTester(" ", "Warming of the planet due to greenhouse gasses")) { // whitespace name
             testPasses++;
         } else { testFailures++; }
         // Invalid case B:
-        if(invalidExhibitCreationTester("Brexit", " ")) {
+        if(invalidExhibitCreationTester("Brexit", " ")) {// Whitespace description
             testPasses++;
         } else { testFailures++; }
 
         // TODO: FIND EXHIBITS MAYBE (kinda already done by proxy with create/update though)
 
         // --- UPDATE EXHIBIT TESTS ---
-
+        System.out.println("--- EXHIBIT UPDATION TESTS --- ");
         // Creates a new artifact for testing:
         String testExhibitid = null;
         try {
@@ -304,6 +314,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
 
         if(testExhibitid != null) { // Only runs if setup was successful
+            System.out.println("- Valid cases: ");
             // - SAFE VALID CASES:
             if (validExhibitUpdaterTester(testExhibitid, "name", "Test Name")) {
                 testPasses++;
@@ -312,7 +323,9 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                 testPasses++;
             } else { testFailures++; }
 
+            System.out.println("- Invalid cases: ");
             // - INVALID CASES:
+            System.out.println("invalid newValue testing (whitespace)...");
             // Tests whitespace (newValue can't be empty)
             if (invalidExhibitUpdaterTester(testExhibitid, "name", "   ")) {
                 testPasses++;
@@ -322,6 +335,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             } else { testFailures++; }
 
             // Tests invalid infoname
+            System.out.println("invalid infoName testing...");
             if (invalidExhibitUpdaterTester(testExhibitid, "Invalid name", "Test value")) {
                 testPasses++;
             } else { testFailures++; }
@@ -330,8 +344,10 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             } else { testFailures++; }
         }
 
+
         // -- DELETE EXHIBIT TESTS ---
         // Creates a new exhibit for testing:
+        System.out.println("--- EXHIBIT DELETION TESTS --- ");
         try {
             testExhibitid = api.createExhibit("DeleteTestName", "Test description");
         } catch(Exception e) {
@@ -339,6 +355,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
         if(testExhibitid != null) {
             try {
+                System.out.println("testing exhibit deletion...");
                 api.deleteExhibit(testExhibitid);
                 if(api.getExhibitInfo(testExhibitid, "name") == null){ // Tries to get info about exhibit.
                     System.out.println("PASS - Exhibit deletion presumed success as it can no longer be found");
@@ -356,7 +373,13 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             testFailures++;
         }
 
+
+        // TEST RESULTS OUTPUT
+        System.out.println("\nEXHIBIT CRUD TESTS:\nTests done: " + (testPasses + testFailures) + "Tests failed" + testFailures + "\n\n"); // Outputs test results like in menu tests
+
     }
+
+    // ------------------------ EXTRA ARTIFACT TESTING SUBMETHODS: ---------------------------------
 
     // Tester for creating exhibits with valid parameters
     private boolean validExhibitCreationTester(String name, String description) {
@@ -445,15 +468,15 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
     }
 
+
+    // TODO: -------------------------------- ANNUAL PLAN CRUD TESTS ---------------------------------------
     @Override
     public void runAnnualPlanCRUDTests()
     {
-        int testPasses = 0;
-        int testFailures = 0;
-
         // --- CREATE ANNUAL PLAN TESTS + READ ANNUAL PLAN INFO TESTING (BY PROXY) ---
         // --- SAFE CASES - All valid case testing (does 2 of example annual plans) ---
 
+        System.out.println("--- ANNUAL PLAN CREATION TESTS --- ");
         // Safe case A:
         if(validAnnualPlanCreationTester(2025)) {
             testPasses++;
@@ -473,6 +496,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
 
         // --- UPDATE ANNUAL PLAN TESTS ---
 
+        System.out.println("\n--- ANNUAL PLAN UPDATION TESTS --- ");
         // Creates a new annual plan for testing:
         String testPlanId = null;
         try {
@@ -482,18 +506,22 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
 
         if(testPlanId != null) { // Only runs if setup was successful
+            System.out.println("- Valid updation tests");
             // - SAFE VALID CASES:
             if (validAnnualPlanUpdaterTester(testPlanId, "year", "2028")) {
                 testPasses++;
             } else { testFailures++; }
 
             // - INVALID CASES:
+            System.out.println("- Invalid updation tests");
             // Tests whitespace (newValue can't be empty)
+            System.out.println("invalid newValue whitespace testing...");
             if (invalidAnnualPlanUpdaterTester(testPlanId, "year", "   ")) {
                 testPasses++;
             } else { testFailures++; }
 
             // Tests invalid infoname
+            System.out.println("invalid infoName testing...");
             if (invalidAnnualPlanUpdaterTester(testPlanId, "Invalid name", "2029")) {
                 testPasses++;
             } else { testFailures++; }
@@ -502,15 +530,17 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             } else { testFailures++; }
 
             // Tests invalid year values
+            System.out.println("invalid year value testing...");
             if (invalidAnnualPlanUpdaterTester(testPlanId, "year", "Invalid value")) { // Tests non integer
                 testPasses++;
             } else { testFailures++; }
-            if (invalidAnnualPlanUpdaterTester(testPlanId, "year", "2025")) { // Tests duplicate year (created in Safe Case A)
+            if (invalidAnnualPlanUpdaterTester(testPlanId, "year", "2025")) { // Tests duplicate year (already created)
                 testPasses++;
             } else { testFailures++; }
         }
 
         // -- DELETE ANNUAL PLAN TESTS ---
+        System.out.println("\n--- ANNUAL PLAN DELETION TESTS --- ");
         // Creates a new annual plan for testing:
         try {
             testPlanId = api.createAnnualPlan(2030);
@@ -519,6 +549,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
         if(testPlanId != null) {
             try {
+                System.out.println("testing annualPlan deletion...");
                 api.deleteAnnualPlan(testPlanId);
                 if(api.getAnnualPlanInfo(testPlanId, "year") == null){ // Tries to get info about annual plan.
                     System.out.println("PASS - Annual plan deletion presumed success as it can no longer be found");
@@ -624,47 +655,174 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
     }
 
-    // TODO: NEED TO FIGURE OUT HOW THIS WORKS
+    // TODO: REFERENCE CODE HERE pretty sure qub end testing methods are needed for this though
+//	    //Update with the actual prompt you expect to have for a the main menu
+//	    final String MAIN_MENU_PROMPT = "";
+//
+//	    try {
+//		    prompt = api.getCurrentPrompt();
+//		    result = api.processInput("1");
+//		    if (prompt != null && MAIN_MENU_PROMPT.equals(prompt)) {
+//		      System.out.println("PASS: Found student correctly");
+//		    } else {
+//		      System.out.println("FAIL: Failed to describe menu");
+//		      numberOfErrors = numberOfErrors+1;
+//		    }
+//		    //Test the result is what you expect
+//		    numberOfTests = numberOfTests+1;
+//	    } catch (Exception e) {
+//	    }
+
 	@Override
     public void runMenuTests() 
     {
+        QUBMuseum api = new QUBMuseum(); // Resets QUB museum for fresh testing unaffected by CRUD tests
+
+        // TODO: figure out what these do
 		String prompt;
 	    String result;
 	    
 	    int numberOfErrors = 0;
 	    int numberOfTests = 0;
-	    
-	    //Update with the actual prompt you expect to have for a the main menu
-	    final String MAIN_MENU_PROMPT = "";
-	    
-	    try {
-		    prompt = api.getCurrentPrompt();
-		    result = api.processInput("1");
-		    if (prompt != null && MAIN_MENU_PROMPT.equals(prompt)) {
-		      System.out.println("PASS: Found student correctly");
-		    } else {
-		      System.out.println("FAIL: Failed to describe menu");
-		      numberOfErrors = numberOfErrors+1;
-		    }
-		    //Test the result is what you expect
-		    numberOfTests = numberOfTests+1;
-	    } catch (Exception e) {
-	    	
-	    }
 
-	    //Expand this example to cover a realistic user interaction
-	    
-	    //Add more end to end tests, starting from a fresh instance
-	    api = new QUBMuseum(); 
+        System.out.println("---- RUNNING MENU TESTS ---- ");
+
+
+
+        // TODO: ACTUAL TESTING CODE:
+
+        // EXAMPLE ARTIFACT:
+        //"Sculpture";"Acropolis Statues";"Cool statues";5
+
+        // MANAGE ARTIFACT TESTING
+
+        // Add artifact test
+        System.out.println("- Manage artifacts tests");
+        System.out.println("add an artifact...");
+        String[] addArtifactInputs = {"1", "1", "Sculpture;Acropolis Statues;Cool statues;5"};
+        if(!doSpecificMenuTest(api, addArtifactInputs, "Artifact added successfully", "Add artifact test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // View artifact test
+        System.out.println("view an artifact...");
+        String[] viewArtifactInputs = {"1", "2", "Sculpture;Acropolis Statues;Cool statues;5"};
+        if(!doSpecificMenuTest(api, viewArtifactInputs, "Artifact added successfully", "Add artifact test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Update artifact test
+        System.out.println("update an artifact...");
+        String[] updateArtifactInputs = {"4", "0;name;Updated Name"};
+        if(!doSpecificMenuTest(api, updateArtifactInputs, "Artifact updated successfully", "Update artifact test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Delete artifact test
+        System.out.println("delete an artifact...");
+        String[] deleteArtifactInputs = {"3", "0"};
+        if(!doSpecificMenuTest(api, deleteArtifactInputs, "Artifact deleted successfully", "Delete artifact test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Go Back to Main Menu
+        System.out.println("returning to main menu...");
+        String[] goBackInputs = {"5"};
+        if(!doSpecificMenuTest(api, goBackInputs, "Returning to main menu", "Go back test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // MANAGE EXHIBITS TESTING
+        System.out.println("- Manage exhibits tests");
+
+        // Add exhibit test
+        System.out.println("add an exhibit...");
+        String[] addExhibitInputs = {"2", "1", "Space;A collection of space stuff"};
+        if(!doSpecificMenuTest(api, addExhibitInputs, "Exhibit added successfully", "Add exhibit test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Update exhibit test
+        System.out.println("update an exhibit...");
+        String[] updateExhibitInputs = {"4", "0;name;Cosmos"};
+        if(!doSpecificMenuTest(api, updateExhibitInputs, "Exhibit updated successfully", "Update exhibit test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Delete exhibit test
+        System.out.println("delete an exhibit...");
+        String[] deleteExhibitInputs = {"3", "0"};
+        if(!doSpecificMenuTest(api, deleteExhibitInputs, "deleted successfully", "Delete exhibit test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Go Back to Main Menu
+        System.out.println("returning to main menu...");
+        String[] goBackExhibitInputs = {"8"};
+        if(!doSpecificMenuTest(api, goBackExhibitInputs, "Returning to main menu", "Go back test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // MANAGE ANNUAL PLANS TESTING
+        System.out.println("- Manage annual plans tests");
+
+        // Add annual plan test
+        System.out.println("add an annual plan...");
+        String[] addPlanInputs = {"3", "1", "2025"};
+        if(!doSpecificMenuTest(api, addPlanInputs, "Annual plan added successfully", "Add annual plan test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Update annual plan test
+        System.out.println("update an annual plan...");
+        String[] updatePlanInputs = {"4", "0;year;2026"};
+        if(!doSpecificMenuTest(api, updatePlanInputs, "Annual plan updated successfully", "Update annual plan test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+        // Delete annual plan test
+        System.out.println("delete an annual plan...");
+        String[] deletePlanInputs = {"3", "0"};
+        if(!doSpecificMenuTest(api, deletePlanInputs, "Annual plan deleted successfully", "Delete annual plan test"))
+        { numberOfErrors++; }
+        numberOfTests ++;
+
+
+        // TODO: OUTPUT OF ALL TESTING RESULTS
+        System.out.println("\nMENU TEST RESULTS:\nTests done: " + numberOfTests + "Tests failed" + numberOfErrors); // Outputs test results
+
     }
 
-    // Probably super inefficient and may crash:
+    // Sub method to significantly reduce code rewriting -> just put in inputs + expected outputs and all processing
+    // and checking final inputs done in this method. takes tests name for debugging using console logs later
+    // could probably do expectedEndTest as an array but that would use so much space and would only be cosmetic bugs anyway
+    // Takes API as input so testings all in 1 big thing and previous menu tests count so its not super isolated
+    private boolean doSpecificMenuTest(QUBMuseum api, String[] inputs, String expectedResultText, String testName) {
+        try { // Tries it so tester wont crash if it throws exception for some reason
+            String resultText = "Unknown";
+            for (String input : inputs) {
+                resultText = api.processInput(input);
+            }
+            if (resultText.equals(expectedResultText)) {
+                System.out.println("PASS - " + testName + " passed.");
+                return true;
+            } else {
+                System.out.println("FAIL - " + testName + " threw exception: " + expectedResultText + " end text:" + resultText);
+                return false;
+            }
+        } catch(Exception e) {
+            System.out.println("FAIL - " + testName + " threw exception: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // TODO: probably will need to make this more efficient will see
 	@Override
     public void runFuzzingTests() // Random user input tests
     {
         int exceptionsThrown = 0; // Records amount of exceptions thrown
-
-    	for(int i = 0; i < 100000; i++)
+        int totalLoops = 20000; // amount of fuzzing loops done. TODO: MAY NEED TO BE MORE AS CHANCE OF SEMICOLON IS 1/255, MAY NEED TO ADD EXTRA SEMICOLON CHANCES OR MORE LOOPS
+    	for(int i = 0; i < totalLoops; i++)
         {
             // Generates a few random number inputs so it actually has a chance to go through menus
             int randomNumberInput1 = (int)(Math.random() * 9);
@@ -676,7 +834,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             String randomlyGeneratedString = "";
             for(int j = 0; j < randomStringLength; j++) {
                 int randomCharIndexValue = (int)(Math.random() * 255); // Goes through most of realistic char values (latin alpahbet according to google + special characters)
-                char randomlyGeneratedChar = (char)(randomCharIndexValue); // Generates a random character to add to string
+                char randomlyGeneratedChar = (char)(randomCharIndexValue); // Generates a random char to add to strig
                 randomlyGeneratedString = randomlyGeneratedString + randomlyGeneratedChar; // Combines existing string with random character
             }
             try {
@@ -696,7 +854,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
 
         // Checks if test passed
         if(exceptionsThrown == 0) {
-            System.out.println("PASS: Fuzzing test passed, 0 exceptions thrown");
+            System.out.println("FUZZING TEST RESULTS\nFuzzing test passed, 0 exceptions were thrown over: " + totalLoops +  "loops");
         } else {
             System.out.println("Fuzzing exceptions thrown: " + exceptionsThrown );
         }

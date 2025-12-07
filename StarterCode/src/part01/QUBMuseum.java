@@ -47,9 +47,19 @@ public class QUBMuseum implements QUBMuseumAPI {
     // DONE
 	@Override
 	public String createArtifact(String type, String name, String description, int engagementMinutes) throws Exception {
-        if(engagementMinutes <= 0 || type.isBlank() || name.isBlank() || description.isBlank()) {
-            return null;
-        }
+        // TODO: ASK SOMEONE ABOUT THIS VALIDATION AS DOCUMENTATIONS SUPER UNCLEAR AND COULD BE REALLY BAD IF MISINTERPRETED DOCS
+        // TYPE VALIDATION - According to documentation, valid types are these common types
+//        String[] validTypes = { "PAINTING", "SCULPTURE", "POTTERY", "JEWELRY", "TEXTILE", "WEAPON", "TOOL", "FOSSIL", "COIN", "PHOTOGRAPH", "DOCUMENT", "OTHER" };
+//        boolean typeIsValid = false;
+//        for(String validType : validTypes) {
+//            if(validType.equalsIgnoreCase(type.toLowerCase())) { // Checks if the given type is the current valid type
+//                typeIsValid = true;
+//                break;
+//           }
+//       }
+//        if(!typeIsValid) { return null; }
+        if(engagementMinutes <= 0 || type.isBlank() || name.isBlank() || description.isBlank()) { return null; }
+
         try {
             String id = Integer.toString(artifactIdCount); // Creates an incremental ID for the new artifact (+1 of previous artifacts ID)
             artifactIdCount++; // Increments ID count
@@ -658,6 +668,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         return "EXIT";
 	}
 
+
 	@Override
     public boolean isValidInput(String input) 
     {
@@ -718,6 +729,7 @@ public class QUBMuseum implements QUBMuseumAPI {
 	@Override
 	public ArrayList<String> getValidInputs()
     {
+        // TODO: ASK WHAT THIS METHODS SUPPOSED TO DO
     	return null;
     }
 
@@ -725,6 +737,7 @@ public class QUBMuseum implements QUBMuseumAPI {
     public ArrayList<String> getInvalidInputs()
     {
     	return null;
+        // TODO: ASK WHAT THIS METHODS SUPPOSED TO DO
     }
 
 	@Override
