@@ -90,7 +90,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             System.out.println("Setup for update artifacts failed." + e.getMessage());
         }
 
-        if(testArtifactid != null) { // Only runs if setup was successful
+        if(testArtifactid != null) { // Runs if setup was successful
             // - SAFE VALID CASES:
             System.out.println("- Valid cases: ");
             if (validArtifactUpdaterTester(testArtifactid, "name", "Test Name")) {
@@ -141,7 +141,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         System.out.println("--- ARTIFACT DELETION TESTS --- ");
         // Creates a new artifact for testing:
         try {
-            testArtifactid = api.createArtifact("DeleteTestType", "TestName","", 1);
+            testArtifactid = api.createArtifact("DeleteTestType", "TestName","Test description", 1);
         } catch(Exception e) {
             System.out.println("Setup for update artifacts failed." + e.getMessage());
         }
@@ -167,11 +167,11 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
 
         // TODO: OUTPUT OF ALL TESTING RESULTS:
 
-        System.out.println("\nARTIFACT CRUD TESTS:\nTests done: " + (testPasses + testFailures) + "Tests failed" + testFailures + "\n\n"); // Outputs test results like in menu tests
+        System.out.println("\nARTIFACT CRUD TESTS:\nTests done: " + (testPasses + testFailures) + "\nTests failed: " + testFailures + "\n"); // Outputs test results like in menu tests
 
     }
 
-    // TODO: COULD PROBABLY MERGE VALID + INVALID METHODS INTO ONE WITH SOME IF STATEMENTS FOR NEATER CODE
+    // TODO: SHOULD PROBABLY MERGE VALID + INVALID METHODS INTO ONE WITH SOME IF STATEMENTS
     // Tester for creating artifacts with valid parameters
     private boolean validArtifactCreationTester(String type, String name, String description, int engagementMinutes) {
         try {
@@ -351,7 +351,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         try {
             testExhibitid = api.createExhibit("DeleteTestName", "Test description");
         } catch(Exception e) {
-            System.out.println("Setup for update exhibits failed (couldn't create exhibit)" + e.getMessage());
+            System.out.println("Setup for update exhibits failed (couldn't create exhibit), Exception: " + e.getMessage());
         }
         if(testExhibitid != null) {
             try {
@@ -361,11 +361,11 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                     System.out.println("PASS - Exhibit deletion presumed success as it can no longer be found");
                     testPasses++;
                 } else {
-                    System.out.println("FAIL - Exhibit deletion failed as values can still be pulled using its ID");
+                    System.out.println("FAIL - Exhibit deletion failed as values can still be gotten using its ID");
                     testFailures++;
                 }
-            } catch(Exception e) { // If an exceptions caused somehow
-                System.out.println("Delete exhibit failed for an unknown reason." + e.getMessage());
+            } catch(Exception e) { // If an exceptions caused somehow -  create exhibit is never supposed to throw exception so code issue probably
+                System.out.println("Delete exhibit failed for an unknown reason. " + e.getMessage());
                 testFailures++;
             }
         } else {
@@ -373,9 +373,8 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             testFailures++;
         }
 
-
         // TEST RESULTS OUTPUT
-        System.out.println("\nEXHIBIT CRUD TESTS:\nTests done: " + (testPasses + testFailures) + "Tests failed" + testFailures + "\n\n"); // Outputs test results like in menu tests
+        System.out.println("\nEXHIBIT CRUD TESTS:\nTests done: " + (testPasses + testFailures) + "\nTests failed: " + testFailures + "\n\n"); // Outputs test results like in menu tests
 
     }
 
@@ -473,8 +472,13 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
     @Override
     public void runAnnualPlanCRUDTests()
     {
+        // RECORDS TEST RESULTS:
+        int testPasses = 0; // Slightly pointless as only outputting total tests but too late now
+        int testFailures = 0;
+
         // --- CREATE ANNUAL PLAN TESTS + READ ANNUAL PLAN INFO TESTING (BY PROXY) ---
         // --- SAFE CASES - All valid case testing (does 2 of example annual plans) ---
+
 
         System.out.println("--- ANNUAL PLAN CREATION TESTS --- ");
         // Safe case A:
@@ -567,6 +571,9 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             testFailures++;
         }
 
+        // OUTPUTS TEST RESULTS:
+        System.out.println("\nANNUAL PLANS CRUD TESTS:\nTests done: " + (testPasses + testFailures) + ".\n Tests failed: " + testFailures + "\n\n"); // Outputs test results like in menu tests
+
     }
 
     // Tester for creating annual plans with valid parameters
@@ -655,7 +662,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         }
     }
 
-    // TODO: REFERENCE CODE HERE pretty sure qub end testing methods are needed for this though
+    // TODO: REFERENCE CODE HERE pretty sure qubMuseum end testing methods are needed for this though
 //	    //Update with the actual prompt you expect to have for a the main menu
 //	    final String MAIN_MENU_PROMPT = "";
 //
@@ -752,7 +759,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
         // Delete exhibit test
         System.out.println("delete an exhibit...");
         String[] deleteExhibitInputs = {"3", "0"};
-        if(!doSpecificMenuTest(api, deleteExhibitInputs, "deleted successfully", "Delete exhibit test"))
+        if(!doSpecificMenuTest(api, deleteExhibitInputs, "Artifact deleted successfully", "Delete exhibit test"))
         { numberOfErrors++; }
         numberOfTests ++;
 
@@ -789,7 +796,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
 
 
         // TODO: OUTPUT OF ALL TESTING RESULTS
-        System.out.println("\nMENU TEST RESULTS:\nTests done: " + numberOfTests + "Tests failed" + numberOfErrors); // Outputs test results
+        System.out.println("\nMENU TEST RESULTS:\nTests done: " + numberOfTests + "\nTests failed: " + numberOfErrors + "\n"); // Outputs test results
 
     }
 
@@ -807,7 +814,7 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                 System.out.println("PASS - " + testName + " passed.");
                 return true;
             } else {
-                System.out.println("FAIL - " + testName + " threw exception: " + expectedResultText + " end text:" + resultText);
+                System.out.println("FAIL - " + testName + " end text doesn't match expected text (" + expectedResultText + "). End text:" + resultText);
                 return false;
             }
         } catch(Exception e) {
@@ -828,6 +835,8 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
             int randomNumberInput1 = (int)(Math.random() * 9);
             int randomNumberInput2 = (int)(Math.random() * 9);
             int randomNumberInput3 = (int)(Math.random() * 9);
+            int randomNumberInput4 = (int)(Math.random() * 9);
+            int randomNumberInput5 = (int)(Math.random() * 9);
 
             // Cant make random strings using java.utils so can use random chars + combines
             int randomStringLength = (int)(Math.random() * 100);
@@ -846,17 +855,17 @@ public class TestingQUBMuseum implements TestingQUBMuseumAPI {
                 api.processInput(randomlyGeneratedString);
                 api.processInput(String.valueOf(randomNumberInput3));
                 api.processInput(randomlyGeneratedString);
+                api.processInput(String.valueOf(randomNumberInput4));
+                api.processInput(randomlyGeneratedString);
+                api.processInput(String.valueOf(randomNumberInput5));
+                api.processInput(randomlyGeneratedString);
             } catch (Exception e) {
                 System.out.println("FAIL: Fuzzing failed - programme threw exception due to invalid input");
                 exceptionsThrown++;
             }
         }
 
-        // Checks if test passed
-        if(exceptionsThrown == 0) {
-            System.out.println("FUZZING TEST RESULTS\nFuzzing test passed, 0 exceptions were thrown over: " + totalLoops +  "loops");
-        } else {
-            System.out.println("Fuzzing exceptions thrown: " + exceptionsThrown );
-        }
+        // OUTPUTS FUZZY TEST RESULTS:
+        System.out.println("\nFUZZING TEST RESULTS:\nFuzzing test looped " + totalLoops + " and threw " + exceptionsThrown + " exceptions");
     }
 }

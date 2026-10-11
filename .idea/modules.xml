@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/StarterCode.iml" filepath="$PROJECT_DIR$/StarterCode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/QUBMuseumManager.iml" filepath="$PROJECT_DIR$/QUBMuseumManager.iml" />
     </modules>
   </component>
 </project>

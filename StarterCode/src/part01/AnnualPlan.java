@@ -43,4 +43,8 @@ public class AnnualPlan {
         exhibits.remove(exhibit);
         exhibitDisplayInfos.remove(exhibit);
     }
+
+    public String toString() {
+        return ("Id: " + id + ", year: " + year + ", exhibits: " + exhibits.toString());
+    }
 }

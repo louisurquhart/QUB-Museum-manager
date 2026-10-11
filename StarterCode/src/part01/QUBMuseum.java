@@ -67,7 +67,6 @@ public class QUBMuseum implements QUBMuseumAPI {
             artifacts.put(id, artifact); // Adds the artifact to the hashmap with the generated ID
             return id; // Returns the ID
         } catch (Exception e) {
-            System.err.println(e.getMessage()); // Outputs exception
             return null; // Returns null as creation was unsuccessful (as documentation says)
         }
 	}
@@ -133,9 +132,15 @@ public class QUBMuseum implements QUBMuseumAPI {
     // DONE TODO: But likely full of logical errors haven't tested or properly looked at
 	@Override
 	public ArrayList<String> findArtifacts(String searchCriteria, String sortBy) throws Exception {
+        if(searchCriteria == null || searchCriteria.isBlank()) { throw new Exception("Enter searchCriteria"); }
+
         String[] splitSearchCriteria = searchCriteria.split("=", 2); // Parses input breaking down search filter type : search value
+        if(splitSearchCriteria.length != 2) { throw new Exception("Invalid search criteria parameters (!= 2)"); }
+
         String searchType = splitSearchCriteria[0];
         String searchValue = splitSearchCriteria[1];
+
+        // Validates its the correct amount of parameters
 
         ArrayList<Artifact> matchingArtifacts = new ArrayList<>(); // Creates an array list of the artifacts which match the search criteria ID's
 
@@ -150,11 +155,11 @@ public class QUBMuseum implements QUBMuseumAPI {
             for (Artifact artifact : artifacts.values()) {
                 artifactMatches = switch (searchType.toLowerCase()) { // Switch statement to accept every possible variable type requested
                     case "type" ->
-                            artifact.getType().equals(searchValue);// Checks if the artifact type matches exactly with the given searchValue
+                            artifact.getType().toLowerCase().equals(searchValue);// Checks if the artifact type matches exactly with the given searchValue
                     case "name" ->
-                            artifact.getName().equals(searchValue);// Checks if the artifact name matches exactly with the given searchValue
+                            artifact.getName().toLowerCase().equals(searchValue);// Checks if the artifact name matches exactly with the given searchValue
                     case "name_contains" ->
-                            artifact.getName().contains(searchValue);// Checks if the artifact name contains the given searchValue
+                            artifact.getName().toLowerCase().contains(searchValue.toLowerCase());// Checks if the artifact name contains the given searchValue
                     case "id" ->
                             artifact.getId().equals(searchValue);// Checks if the artifact ID matches exactly with the given searchValue
                     default -> artifactMatches;
@@ -168,7 +173,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         // SORTING ALGORITHM HERE (Options: 'name', 'type' , 'id', 'engagement' - name and type are done alphabetically, id numerically and engagement accending
         //  NEED TO USE String.compareToIgnoreCase to compare lexicographical order (alphabetically kinda but works for all strings)
 
-        if(sortBy == null) { sortBy = "id"; } // In line with docs,  if sortBy = null it will default to sorting by ID
+        if(sortBy == null || sortBy.equals("null")) { sortBy = "id"; } // In line with docs,  if sortBy = null it will default to sorting by ID
 
         int swaps; // Counts how many swaps have occurred
         do {
@@ -185,6 +190,7 @@ public class QUBMuseum implements QUBMuseumAPI {
                         if (Integer.parseInt(artifact1.getId()) > Integer.parseInt(artifact2.getId())) { swapNeeded = true; } break;
                     case "engagement":
                         if (artifact1.getEngagementMinutes() > artifact2.getEngagementMinutes()) { swapNeeded = true; } break;
+                    default: throw new Exception("Invalid sortBy value given");
                 }
                 if(swapNeeded) { // Switches the position of the two artifacts in the ArrayList
                     matchingArtifacts.set(i+1, artifact1);
@@ -224,6 +230,10 @@ public class QUBMuseum implements QUBMuseumAPI {
 	{
         // Finds the exhibit using its ID as a key for the exhibits hashmap
         Exhibit exhibit = exhibits.get(exhibitId);
+
+        // If it doesn't exist it returns null inline with documentations
+        if(exhibit == null) { return null; }
+
         // Depending on infoName, it then returns the appropriate info (info names based off the API documentation)
         return switch (infoName) {
             case "name" -> exhibit.getName();
@@ -280,6 +290,8 @@ public class QUBMuseum implements QUBMuseumAPI {
 
         ArrayList<Exhibit> matchingExhibits = new ArrayList<>(); // Creates an array list of the exhibits which match the search criteria ID's
 
+        searchValue = searchValue.toLowerCase();
+
         // SEARCHING ALGORITHM HERE (Options: 'name' (exact), 'name_contains' (just contains), 'id')
         boolean exhibitMatches = false; // Flag set to true if match with searchType + searchValue found.
         if (searchType == null ) { // If the searchTypes null
@@ -290,8 +302,8 @@ public class QUBMuseum implements QUBMuseumAPI {
         else {
             for (Exhibit exhibit : exhibits.values()) {
                 exhibitMatches = switch (searchType.toLowerCase()) { // Switch statement to accept every possible variable type requested
-                    case "name" ->  exhibit.getName().equals(searchValue); // Checks if the exhibit name matches exactly with the given searchValue
-                    case "name_contains" -> exhibit.getName().contains(searchValue); // Checks if the exhibit name contains the given searchValue
+                    case "name" ->  exhibit.getName().toLowerCase().equals(searchValue); // Checks if the exhibit name matches exactly with the given searchValue
+                    case "name_contains" -> exhibit.getName().toLowerCase().contains(searchValue); // Checks if the exhibit name contains the given searchValue
                     case "id" ->  exhibit.getId().equals(searchValue); // Checks if the exhibit ID matches exactly with the given searchValue
                     default -> throw new Exception("Invalid searchCriteria given");
                 };
@@ -302,7 +314,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         }
         // SORTING ALGORITHM HERE (Options: 'name', 'id', null - name's done alphabetically and id numerically, null is default done by ID
         //  NEED TO USE String.compareToIgnoreCase to compare lexicographical order (alphabetically essentially)
-        if(sortBy == null) { sortBy = "id"; } // In line with docs,  if sortBy = null it will default to sorting by ID
+        if(sortBy == null || sortBy.equals("null")) { sortBy = "id"; } // In line with docs,  if sortBy = null it will default to sorting by ID
 
         boolean swapNeeded = false;
         int swaps; // Counts how many swaps have occurred
@@ -311,12 +323,12 @@ public class QUBMuseum implements QUBMuseumAPI {
             for (int i = 0; i < matchingExhibits.size() - 1; i++) {
                 Exhibit exhibit1 = matchingExhibits.get(i);
                 Exhibit exhibit2 = matchingExhibits.get(i + 1);
-                switch (sortBy) {
+                switch (sortBy.toLowerCase()) {
                     case "name":  // If the result of compareToIgnoreCase is > 0 (positive), It means that a swap's required as exhibit 1s name is deeper in the alphabet compared to exhibit 2s name
                         if (exhibit1.getName().compareToIgnoreCase(exhibit2.getName()) > 0) { swapNeeded = true; } break;
                     case "id": // If the converted to int id of exhibit1 is > exhibit2's, they're swapped as it means that exhibit 1's ID is higher than the next value
                         if (Integer.parseInt(exhibit1.getId()) > Integer.parseInt(exhibit2.getId())) { swapNeeded = true; } break;
-                    default: // TODO: throw exception
+                    default: throw new Exception("Invalid sortBy value given");
                 }
                 if(swapNeeded) { // Switches the position of the two exhibits in the ArrayList
                     matchingExhibits.set(i+1, exhibit1);
@@ -339,6 +351,12 @@ public class QUBMuseum implements QUBMuseumAPI {
 	{
 		Exhibit exhibit = exhibits.get(exhibitId); // Gets reference to exhibit
         Artifact artifact = artifacts.get(artifactId); // Gets reference to artifact
+
+        for(Artifact otherArtifact : exhibit.getArtifacts()) {
+            if(artifact.getId().equals(otherArtifact.getId())) {
+                throw new Exception("Artifact already exists in the exhibit");
+            }
+        }
         exhibit.addArtifact(artifact, sign); // Adds artifact to exhibit with its sign
 	}
 
@@ -358,10 +376,13 @@ public class QUBMuseum implements QUBMuseumAPI {
         Exhibit exhibit = exhibits.get(exhibitId);
         ArrayList<String> exhibitIds = new ArrayList<>();
 
+        if(exhibit == null) { return null; }
+
         // Converts the array of artifacts -> array of artifact IDs:
         for(Artifact artifact : exhibit.getArtifacts()) {
             exhibitIds.add(exhibit.getId());
         }
+        if(exhibitIds.isEmpty()) { return null; }
         return exhibitIds; // Returns the converted arrayList of artifact ID's
 	}
 
@@ -378,7 +399,7 @@ public class QUBMuseum implements QUBMuseumAPI {
         // Creation of a checklist
         ArrayList<String> checklistOfExhibitIds = new ArrayList<>(); // To validate all artifactId's given exist (in the exhibit) + aren't duplicated
         for(Artifact artifact : exhibit.getArtifacts() ) { // Adds all artifactIds in the exhibit to the checklist
-            checklistOfExhibitIds.add(exhibit.getId());
+            checklistOfExhibitIds.add(artifact.getId());
         }
         for(String artifactId : artifactIds) { // Goes through all the given artifactIds
             if(!checklistOfExhibitIds.contains(artifactId)) { // If the given artifactID doesn't exist in the list of preexisting exhibits artifact ID's
@@ -420,7 +441,6 @@ public class QUBMuseum implements QUBMuseumAPI {
         // Generates ID for annual plan + increments counts
         String id = Integer.toString(annualPlanIdCount);
         annualPlanIdCount++;
-
         annualPlans.put(id, new AnnualPlan(year, id)); // TODO: Check if validation required
 		return id;
 	}
@@ -535,17 +555,17 @@ public class QUBMuseum implements QUBMuseumAPI {
         // LEVEL 2 STATES:
         else if (currentState == MenuStates.MANAGE_ARTIFACTS) {
             return """
-            MANAGE ARTIFACTS MENU
+            MANAGE ARTIFACTS MENU (Press 5 to go back from any options)
             Options:
             1. Add an artifact
             2. View an artifact
             3. Delete an artifact
-            4. Update an artifacts info5
+            4. Update an artifacts info
             5. Go back
             """;
         } else if(currentState == MenuStates.MANAGE_EXHIBITS) {
             return """
-            MANAGE EXHIBITS MENU
+            MANAGE EXHIBITS MENU (Press 5 to go back from any options)
             Options:
             1. Add an exhibit
             2. View an exhibit
@@ -558,7 +578,7 @@ public class QUBMuseum implements QUBMuseumAPI {
             """;
         } else if(currentState == MenuStates.MANAGE_ANNUAL_PLANS) {
             return """
-            MANAGE ANNUAL_PLANS MENU
+            MANAGE ANNUAL_PLANS MENU (Press 5 to go back from any options)
             Options:
             1. Add an annual plan
             2. View an annual plan
@@ -653,10 +673,7 @@ public class QUBMuseum implements QUBMuseumAPI {
             """;
         } else if(currentState == MenuStates.DELETE_ANNUAL_PLAN) {
             return """
-            Enter the annual plans ID + the information to updates name + the value to replace the info
-            - infoName options: year, id
-            - newValue restrictions (year/id - Integers)
-            - Format: (ID;infoName;newValue) - ignoring brackets, no whitespace, semicolons separating each value
+            Enter the annual plans ID to delete:
             """;
         } else if(currentState == MenuStates.ADD_EXHIBIT_TO_ANNUAL_PLAN) {
             return """
@@ -855,6 +872,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 }
                 break;
             case ADD_ARTIFACT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ARTIFACTS;
+                    return "Returning to manage artifacts menu...";
+                }
                 try {
                     String[] splitSearchCriteria = input.split(";", 4);  // Splits input breaking it down into seperate variables
                     if (splitSearchCriteria.length != 4) { // If there isn't 4 seperate varaibles after parsing, an error is returned
@@ -870,11 +891,11 @@ public class QUBMuseum implements QUBMuseumAPI {
 
                     // createArtifact will return null if it fails to create so an error will be output if so:
                     if (newArtifactsId == null) {
-                        return "ERROR - Failiure to create artifact; Potentially invalid input";
+                        return "ERROR - Failiure to create artifact; Potentially invalid input. Input 5 to go back";
                     }
 
                 } catch (NumberFormatException e) {
-                    return "ERROR - Invalid engagementMinutes given; Needs to be an integer";
+                    return "ERROR - Invalid engagementMinutes given; Needs to be an integer. Input 5 to go back";
                 } catch (Exception e) {
                     return "ERROR -" + e.getMessage(); // Returns exception as something bad has happened (something's wrong with code)
                 }
@@ -882,6 +903,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_ARTIFACTS;
                 break;
             case VIEW_ARTIFACT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ARTIFACTS;
+                    return "Returning to manage artifacts menu...";
+                }
                 try {
                     // Splits input into separate variables:
                     String[] splitSearchCriteria = input.split(";", 2);
@@ -893,23 +918,27 @@ public class QUBMuseum implements QUBMuseumAPI {
 
                     output = ""; // Clears output from before so concatination works properly
                     if(foundArtifactIds.size() == 0) { // If no artifact IDs are returned
-                        return "No artifacts found under given search criteria";
+                        return "No artifacts found under given search criteria. Input 5 to go back";
                     }
                     for (String artifactId : foundArtifactIds ) { // Combines all artifacts toString results in a loop
                         output = output + (artifacts.get(artifactId).toString() + "\n");
                     }
                 } catch(Exception e) {
-                    return "ERROR - " +  e.getMessage(); // Unknown exception thrown, returned to user; probably to do with code
+                    return "ERROR - " +  e.getMessage() + ". Press 5 to go back"; // Unknown exception thrown, returned to user; probably to do with code
                 }
                 currentState = MenuStates.MANAGE_ARTIFACTS;
                 break;
             case DELETE_ARTIFACT: // Artifact ID is input for this
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ARTIFACTS;
+                    return "Returning to manage artifacts menu...";
+                }
                 try {
                     Artifact artifact = artifacts.get(input); // Gets artifact using its ID
                     if (artifact != null) { // If artifact exists in the hashmap (ID is valid)
                         deleteArtifact(input); // Delete artifacts called
                     } else {
-                        return "ERROR - Artifact ID is not found, ID given likely invalid.";
+                        return "ERROR - Artifact ID is not found, ID given likely invalid. Press 5 to go back";
                     }
                 } catch(Exception e) {
                     return "ERROR - " +  e.getMessage(); // probs something wrong with code
@@ -919,6 +948,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 break;
             case UPDATE_ARTIFACT:
                try {
+                   if(input.equals("5")) {
+                       currentState = MenuStates.MANAGE_ARTIFACTS;
+                       return "Returning to manage artifacts menu...";
+                   }
                    // Splits input up into separate variables
                    String[] splitSearchCriteria = input.split(";", 3);
                    String artifactId = splitSearchCriteria[0];
@@ -927,10 +960,10 @@ public class QUBMuseum implements QUBMuseumAPI {
 
                    // Attempts to validate user input. All other invalid inputs will be caught by exception
                    if(artifacts.get(artifactId) == null) { // Validates artifact exists. If if statements true it doesn't
-                       return "ERROR - Artifact ID is not found, ID given likely invalid.";
+                       return "ERROR - Artifact ID is not found, ID given likely invalid. Press 5 to go back";
                    }
                    else if(!(infoName.equals("name") || infoName.equals("type") || infoName.equals("description") || infoName.equals("engagementMinutes"))) {
-                       return "ERROR - Given infoName is invalid, must be either name, type, description or engagementMinutes";
+                       return "ERROR - Given infoName is invalid, must be either name, type, description or engagementMinutes. Input 5 to go back";
                    }
                    else if(newValue == null) {
                        return "ERROR - newValue is null";
@@ -938,13 +971,17 @@ public class QUBMuseum implements QUBMuseumAPI {
                    // If basic validation passes, updateArtifactInfo is called with variables inputted
                    updateArtifactInfo(artifactId, infoName, newValue);
                } catch (Exception e) { // TODO: COULD MAYBE CHECK IF INVALID INTEGER EXCEPTION IF ENGAGEMENTMINUTES ISNT INT
-                   return "ERROR - " +  e.getMessage(); // Could be due to code OR invalid user input
+                   return "ERROR - " +  e.getMessage() + ". Input 5 to go back"; // Could be due to code OR invalid user input
                }
                output = "Artifact updated successfully";
                 currentState = MenuStates.MANAGE_ARTIFACTS;
                break;
             // EXHIBIT STUFF
             case ADD_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     String[] splitSearchCriteria = input.split(";", 2);  // Splits input into separate variables
                     if (splitSearchCriteria.length != 2) { // If there isn't 2 seperate varaibles after parsing, an error is returned
@@ -973,6 +1010,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case VIEW_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     // Splits input into separate variables:
                     String[] splitSearchCriteria = input.split(";", 2);
@@ -994,6 +1035,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case DELETE_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     Exhibit exhibit = exhibits.get(input); // Gets object using its ID
                     if (exhibit != null) { // If exhibit exists in the hashmap (ID is valid)
@@ -1008,6 +1053,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case UPDATE_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     // Splits input up into separate variables
                     String[] splitSearchCriteria = input.split(";", 3);
@@ -1034,6 +1083,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case ADD_ARTIFACT_TO_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     // Splits input values into seperate variables
                     String[] splitSearchCriteria = input.split(";", 3);
@@ -1052,6 +1105,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case DELETE_ARTIFACT_IN_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     // Splits input values into separate variables
                     String[] splitSearchCriteria = input.split(";", 2);
@@ -1068,6 +1125,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case REORDER_ARTIFACTS_IN_EXHIBIT:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_EXHIBITS;
+                    return "Returning to manage exhibits menu...";
+                }
                 try {
                     // Breaks up initial input into exhibit + artifact IDs
                     String[] splitSearchCriteria = input.split(";", 2);
@@ -1089,6 +1150,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_EXHIBITS;
                 break;
             case ADD_ANNUAL_PLAN:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                    return "Returning to manage annual plans menu...";
+                }
                 try {
                     createAnnualPlan(Integer.parseInt(input)); // Tries to create annual plan
                 } catch(Exception e) { // If it fails exceptions thrown
@@ -1098,6 +1163,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_ANNUAL_PLANS;
                 break;
             case VIEW_ANNUAL_PLAN:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                    return "Returning to manage annual plans menu...";
+                }
                 try {
                     String planId = getAnnualPlan(Integer.parseInt(input));
                     output = annualPlans.get(planId).toString();
@@ -1107,6 +1176,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_ANNUAL_PLANS;
                 break;
             case DELETE_ANNUAL_PLAN:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                    return "Returning to manage annual plans menu...";
+                }
                 try {
                     deleteAnnualPlan(input);
                 } catch(Exception e) {
@@ -1116,6 +1189,10 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_ANNUAL_PLANS;
                 break;
             case UPDATE_ANNUAL_PLAN:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                    return "Returning to manage annual plans menu...";
+                }
                 try {
                     // Splits up input into separate variables
                     String[] splitSearchCriteria = input.split(";", 3);
@@ -1130,9 +1207,13 @@ public class QUBMuseum implements QUBMuseumAPI {
                 currentState = MenuStates.MANAGE_ANNUAL_PLANS;
                 break;
             case ADD_EXHIBIT_TO_ANNUAL_PLAN:
+                if(input.equals("5")) {
+                    currentState = MenuStates.MANAGE_ANNUAL_PLANS;
+                    return "Returning to manage annual plans menu...";
+                }
                 try {
                     // Splits up input into separate variables
-                    String[] splitSearchCriteria = input.split(";", 4);
+                    String[] splitSearchCriteria = input.split(";");
                     String exhibitId = splitSearchCriteria[0];
                     String annualPlanId = splitSearchCriteria[1];
                     String hall = splitSearchCriteria[2];
